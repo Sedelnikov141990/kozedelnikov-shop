@@ -7,71 +7,116 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 15px;
-      background-color: #f4f4f5;
-      color: #222;
+      background-color: var(--tg-theme-bg-color, #f4f4f5);
+      color: var(--tg-theme-text-color, #222);
     }
     h2 {
       text-align: center;
       margin-bottom: 20px;
+      font-size: 20px;
     }
     .card {
-      background: #ffffff;
+      background: var(--tg-theme-secondary-bg-color, #ffffff);
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+    .card p {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      color: #666;
     }
     .price {
       font-weight: bold;
       color: #2e7d32;
       font-size: 16px;
-      margin: 8px 0;
+      margin-bottom: 12px;
     }
     button {
       width: 100%;
-      background-color: #2481cc;
-      color: #ffffff;
+      background-color: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #ffffff);
       border: none;
       padding: 12px;
       border-radius: 8px;
       font-size: 15px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:active {
+      opacity: 0.8;
     }
   </style>
 </head>
 <body>
 
-  <h2>🏷️ Каталог изделий</h2>
+  <h2>🏷️ Каталог изделий Kozhedelnikov</h2>
 
   <div class="card">
     <h3>💼 Кожаный кошелек</h3>
-    <p>Ручная работа, натуральная кожа.</p>
+    <p>Ручная работа, натуральная кожа премиум качества.</p>
     <div class="price">3 500 ₽</div>
     <button onclick="order('Кожаный кошелек', 3500)">Заказать</button>
   </div>
 
   <div class="card">
     <h3>📦 Деревянная шкатулка</h3>
-    <p>Резьба по дереву, дуб.</p>
+    <p>Резьба по дереву, массив дуба, покрыта лаком.</p>
     <div class="price">5 000 ₽</div>
     <button onclick="order('Деревянная шкатулка', 5000)">Заказать</button>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.ready();
     tg.expand();
 
-    function order(productName, price) {
-      tg.sendData(JSON.stringify({
-        product: productName,
-        price: price
-      }));
-      tg.close();
+    // ================= НАСТРОЙКИ =================
+    const BOT_TOKEN = "8686465555:AAHVwrsd-tShyB7FTfRqmafh1BaqtoOckEw";
+    const ADMIN_ID = "1096196094"; // Твой цифровой Telegram ID
+    // =============================================
+
+    async function order(productName, price) {
+      // Получаем информацию о покупателе из контекста Telegram
+      const user = tg.initDataUnsafe?.user;
+      const userName = user ? (user.username ? `@${user.username}` : user.first_name) : "Неизвестный";
+      const userId = user ? user.id : "Не определен";
+
+      // Текст сообщения мастеру
+      const messageText = `🔥 <b>НОВЫЙ ЗАКАЗ (Mini App)!</b>\n\n` +
+                          `📦 <b>Товар:</b> ${productName}\n` +
+                          `💰 <b>Сумма:</b> ${price} ₽\n\n` +
+                          `👤 <b>Покупатель:</b> ${userName}\n` +
+                          `🆔 <b>Telegram ID:</b> <code>${userId}</code>`;
+
+      try {
+        // Отправляем уведомление мастеру напрямую
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: ADMIN_ID,
+            text: messageText,
+            parse_mode: 'HTML'
+          })
+        });
+
+        // Показываем красивое всплывающее окно покупателю
+        tg.showAlert(`✅ Заказ на "${productName}" успешно оформлен! Мастер свяжется с вами.`, () => {
+          tg.close();
+        });
+      } catch (err) {
+        console.error(err);
+        tg.showAlert("Произошла ошибка при отправке заказа.");
+      }
     }
   </script>
 </body>
