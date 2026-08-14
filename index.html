@@ -7,53 +7,39 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: sans-serif;
       margin: 0;
       padding: 15px;
-      background-color: var(--tg-theme-bg-color, #f4f4f5);
-      color: var(--tg-theme-text-color, #222);
+      background-color: #f4f4f5;
+      color: #222;
     }
     h2 {
       text-align: center;
       margin-bottom: 20px;
-      font-size: 20px;
     }
     .card {
-      background: var(--tg-theme-secondary-bg-color, #ffffff);
+      background: #ffffff;
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 15px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-    .card h3 {
-      margin: 0 0 8px 0;
-      font-size: 18px;
-    }
-    .card p {
-      margin: 0 0 12px 0;
-      font-size: 14px;
-      color: #666;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     .price {
       font-weight: bold;
       color: #2e7d32;
       font-size: 16px;
-      margin-bottom: 12px;
+      margin: 8px 0;
     }
     button {
       width: 100%;
-      background-color: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #ffffff);
+      background-color: #2481cc;
+      color: #ffffff;
       border: none;
       padding: 12px;
       border-radius: 8px;
       font-size: 15px;
-      font-weight: 600;
+      font-weight: bold;
       cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    button:active {
-      opacity: 0.8;
     }
   </style>
 </head>
@@ -63,20 +49,21 @@
 
   <div class="card">
     <h3>💼 Кожаный кошелек</h3>
-    <p>Ручная работа, натуральная кожа премиум качества.</p>
+    <p>Ручная работа, натуральная кожа.</p>
     <div class="price">3 500 ₽</div>
     <button onclick="order('Кожаный кошелек', 3500)">Заказать</button>
   </div>
 
   <div class="card">
     <h3>📦 Деревянная шкатулка</h3>
-    <p>Резьба по дереву, массив дуба, покрыта лаком.</p>
+    <p>Резьба по дереву, дуб.</p>
     <div class="price">5 000 ₽</div>
     <button onclick="order('Деревянная шкатулка', 5000)">Заказать</button>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
+    tg.ready();
     tg.expand();
 
     function order(productName, price) {
