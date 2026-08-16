@@ -311,6 +311,7 @@
       scroll-snap-align: start;
       border-radius: var(--radius);
       background-color: #26201b;
+      transition: opacity 0.2s ease;
     }
 
     .gallery-dots {
@@ -480,7 +481,7 @@
     <div id="cart-total">0 ₽</div>
   </div>
 
-  <!-- Modal: Product Detailed View with Customization -->
+  <!-- Modal: Product Detailed View -->
   <div class="modal-overlay" id="product-detail-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -496,10 +497,10 @@
         <p id="detail-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
       </div>
 
-      <!-- Individual Options -->
+      <!-- Color Select with Live Photo Switch -->
       <div class="form-group">
-        <label class="form-label">Цвет кожи для этого изделия:</label>
-        <select class="form-select" id="item-color-select"></select>
+        <label class="form-label">Цвет кожи изделия:</label>
+        <select class="form-select" id="item-color-select" onchange="onColorChange()"></select>
       </div>
 
       <div class="form-group">
@@ -520,7 +521,7 @@
     </div>
   </div>
 
-  <!-- Modal: Cart & Delivery Details -->
+  <!-- Modal: Cart & Delivery -->
   <div class="modal-overlay" id="cart-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -560,30 +561,35 @@
     const BOT_TOKEN = "8736449894:AAE6MmYnPSemwRFRAFUUXRiM2tFSvUaiScY";
     const ADMIN_ID = "1096196094";
 
-    // Базовые цвета кожи по умолчанию
-    const DEFAULT_COLORS = [
-      "Коньячный (Рыжий)",
-      "Темно-коричневый (Шоколад)",
-      "Черный матовый",
-      "Изумрудный (Зеленый)"
-    ];
-
-    // Список товаров. Можно задать customColors для определенной позиции!
+    // Каталог товаров с поддержкой вариантов фото под каждый цвет
     const products = [
       { 
         id: 101, 
-        category: 'accessories', 
-        name: 'Обложка Classic Driver', 
-        price: 9000, 
-        desc: 'Обложка для документов из бархатистой кожи. 3 отдела для паспорта и ПТС. 3 отдела под карты и водительское удостоверение. Удобная кнопка, чтобы не потерять важное. Ручной седельный шов вощеной нитью.', 
-        images: [
-          './images/oblozhkaV1/img1.webp',
-			    './images/oblozhkaV1/img2.webp',
-			    './images/oblozhkaV1/img3.webp',
-			    './images/oblozhkaV1/img4.webp',
-			    './images/oblozhkaV1/img6.webp'
-        ],
-        colors: ["Шоколадный", "Черный матовый", "Бордовый Crazy Horse"] // Свои цвета для бифолда
+        category: 'wallets', 
+        name: 'Бифолд «Classic Craft»', 
+        price: 4500, 
+        desc: 'Классический кошелек из плотной кожи растительного дубления. 4 отдела под карты и вместительный отсек для купюр. Ручной седельный шов вощеной нитью.', 
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: [
+              './images/img2.webp',
+              './images/oblozhkaV1/img2.webp'
+            ]
+          },
+          {
+            color: "Черный матовый",
+            images: [
+              'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80'
+            ]
+          },
+          {
+            color: "Темно-коричневый (Шоколад)",
+            images: [
+              'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80'
+            ]
+          }
+        ]
       },
       { 
         id: 102, 
@@ -591,7 +597,16 @@
         name: 'Картхолдер «Slim Leather»', 
         price: 2200, 
         desc: 'Компактный зажим для 6 карт и наличных. Ручной седельный шов. Не утолщает карман.', 
-        images: ['https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: ['https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80']
+          },
+          {
+            color: "Черный матовый",
+            images: ['https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 103, 
@@ -599,7 +614,16 @@
         name: 'Лонгволлет «Traveler»', 
         price: 6800, 
         desc: 'Вместительный портмоне для паспорта, телефона, карт и авиабилетов. Закрывается на надежные латунные кнопки.', 
-        images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
+          },
+          {
+            color: "Темно-коричневый (Шоколад)",
+            images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 201, 
@@ -607,7 +631,16 @@
         name: 'Сумка-мессенджер «Urban»', 
         price: 14500, 
         desc: 'Наплечная сумка под ноутбук 14" и документы А4. Литая латунная фурнитура, плотный подклад.', 
-        images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Темно-коричневый (Шоколад)",
+            images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80']
+          },
+          {
+            color: "Черный матовый",
+            images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 202, 
@@ -615,7 +648,12 @@
         name: 'Рюкзак «Heritage»', 
         price: 18900, 
         desc: 'Рюкзак из толстой кожи растительного дубления с усиленными мягкими лямками и внутренним карманом для гаджетов.', 
-        images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 203, 
@@ -623,7 +661,12 @@
         name: 'Поясная сумка «Bumbag»', 
         price: 7200, 
         desc: 'Стильная кросс-боди сумка для прогулок и путешествий. Прочный регулируемый кожаный ремень.', 
-        images: ['https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: ['https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 301, 
@@ -631,7 +674,16 @@
         name: 'Ремень «Brass Buckle»', 
         price: 4800, 
         desc: 'Ремень из цельной ременной полосы чепрака 4 мм с массивной литой латунной пряжкой.', 
-        images: ['https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Черный матовый",
+            images: ['https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=600&q=80']
+          },
+          {
+            color: "Темно-коричневый (Шоколад)",
+            images: ['https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 302, 
@@ -639,7 +691,12 @@
         name: 'Обложка для автодокументов', 
         price: 3400, 
         desc: 'Комплексный органайзер для паспорта, СТС, водительского удостоверения и страхового полиса.', 
-        images: ['https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: ['https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 303, 
@@ -647,7 +704,12 @@
         name: 'Ключница «Key Holder»', 
         price: 1900, 
         desc: 'Компактный футляр для ключей. Надежно защитит экран телефона и ткань карманов от царапин.', 
-        images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Коньячный (Рыжий)",
+            images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 401, 
@@ -655,8 +717,16 @@
         name: 'Портупея «Elegance»', 
         price: 5500, 
         desc: 'Изящная кожаная портупея из мягкой премиальной юфти с индивидуальной подгонкой по фигуре.', 
-        images: ['https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80'],
-        colors: ["Черный матовый", "Красный глубокий", "Шоколад"]
+        colorVariants: [
+          {
+            color: "Черный матовый",
+            images: ['https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80']
+          },
+          {
+            color: "Красный глубокий",
+            images: ['https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 402, 
@@ -664,7 +734,12 @@
         name: 'Чокер с кольцом «Minimal»', 
         price: 2500, 
         desc: 'Аккуратный чокер из гладкой кожи с литым цельным кольцом и надежной застежкой.', 
-        images: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Черный матовый",
+            images: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       },
       { 
         id: 403, 
@@ -672,7 +747,12 @@
         name: 'Кожаный флоггер «Craft»', 
         price: 6200, 
         desc: 'Идеально сбалансированный флоггер из мягких хвостов с удобной деревянной рукоятью в коже.', 
-        images: ['https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=600&q=80']
+        colorVariants: [
+          {
+            color: "Черный матовый",
+            images: ['https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=600&q=80']
+          }
+        ]
       }
     ];
 
@@ -688,7 +768,7 @@
         : products.filter(p => p.category === filter);
 
       filtered.forEach(p => {
-        const coverImg = (p.images && p.images.length > 0) ? p.images[0] : '';
+        const coverImg = (p.colorVariants && p.colorVariants[0] && p.colorVariants[0].images[0]) || '';
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
@@ -721,7 +801,6 @@
       renderProducts(cat);
     }
 
-    // Modal Product Details
     function openProductModal(productId) {
       const p = products.find(item => item.id === productId);
       if (!p) return;
@@ -731,24 +810,47 @@
       document.getElementById('detail-price').textContent = `${p.price.toLocaleString()} ₽`;
       document.getElementById('detail-desc').textContent = p.desc;
 
-      // Заполняем доступные цвета для конкретного изделия
+      // Заполняем варианты цветов
       const colorSelect = document.getElementById('item-color-select');
-      const itemColors = p.colors && p.colors.length > 0 ? p.colors : DEFAULT_COLORS;
-      colorSelect.innerHTML = itemColors.map(c => `<option value="${c}">${c}</option>`).join('');
+      colorSelect.innerHTML = p.colorVariants.map((cv, idx) => `
+        <option value="${idx}">${cv.color}</option>
+      `).join('');
 
-      // Сброс полей гравировки
+      // Сброс гравировки
       document.getElementById('item-engraving-check').checked = false;
       document.getElementById('item-engraving-group').style.display = 'none';
       document.getElementById('item-engraving-text').value = '';
 
-      // Галерея
+      // Первичная отрисовка фото для первого цвета
+      updateGalleryForSelectedColor();
+
+      const addBtn = document.getElementById('detail-add-btn');
+      addBtn.onclick = () => {
+        addItemWithCustomization();
+      };
+
+      document.getElementById('product-detail-modal').classList.add('active');
+    }
+
+    function onColorChange() {
+      updateGalleryForSelectedColor();
+    }
+
+    function updateGalleryForSelectedColor() {
+      if (!currentModalProduct) return;
+
+      const colorIndex = parseInt(document.getElementById('item-color-select').value, 10) || 0;
+      const selectedVariant = currentModalProduct.colorVariants[colorIndex];
+      const imgs = selectedVariant ? selectedVariant.images : [];
+
       const gallery = document.getElementById('detail-gallery');
       const dotsContainer = document.getElementById('gallery-dots');
-      const imgs = p.images && p.images.length > 0 ? p.images : [];
 
       gallery.innerHTML = imgs.map((src, idx) => `
-        <img src="${src}" alt="${p.name} - ракурс ${idx + 1}" loading="lazy">
+        <img src="${src}" alt="${currentModalProduct.name} - ${selectedVariant.color} ${idx + 1}" loading="lazy">
       `).join('');
+
+      gallery.scrollLeft = 0; // Возврат на первое фото при смене цвета
 
       dotsContainer.innerHTML = imgs.length > 1 
         ? imgs.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}"></div>`).join('')
@@ -759,13 +861,6 @@
         const dots = dotsContainer.querySelectorAll('.dot');
         dots.forEach((d, i) => d.classList.toggle('active', i === scrollIndex));
       };
-
-      const addBtn = document.getElementById('detail-add-btn');
-      addBtn.onclick = () => {
-        addItemWithCustomization();
-      };
-
-      document.getElementById('product-detail-modal').classList.add('active');
     }
 
     function closeProductModal() {
@@ -778,18 +873,19 @@
       document.getElementById('item-engraving-group').style.display = check.checked ? 'block' : 'none';
     }
 
-    // Добавление позиции с выбранными опциями
     function addItemWithCustomization() {
       if (!currentModalProduct) return;
 
-      const color = document.getElementById('item-color-select').value;
+      const colorIndex = parseInt(document.getElementById('item-color-select').value, 10) || 0;
+      const selectedVariant = currentModalProduct.colorVariants[colorIndex];
+      const colorName = selectedVariant.color;
+      const previewImg = selectedVariant.images[0] || '';
+
       const hasEngraving = document.getElementById('item-engraving-check').checked;
       const engravingText = hasEngraving ? document.getElementById('item-engraving-text').value.trim() : null;
 
       const unitPrice = currentModalProduct.price + (hasEngraving ? 500 : 0);
-      
-      // Уникальный ключ позиции (чтобы отличать один и тот же кошелек разных цветов)
-      const cartKey = `${currentModalProduct.id}_${color}_${hasEngraving ? (engravingText || 'yes') : 'none'}`;
+      const cartKey = `${currentModalProduct.id}_${colorName}_${hasEngraving ? (engravingText || 'yes') : 'none'}`;
 
       const existing = cart.find(i => i.cartKey === cartKey);
       if (existing) {
@@ -799,9 +895,9 @@
           cartKey: cartKey,
           id: currentModalProduct.id,
           name: currentModalProduct.name,
-          image: (currentModalProduct.images && currentModalProduct.images[0]) || '',
+          image: previewImg,
           price: unitPrice,
-          color: color,
+          color: colorName,
           engraving: engravingText || (hasEngraving ? 'Да' : null),
           qty: 1
         });
@@ -877,7 +973,6 @@
       document.getElementById('cart-modal').classList.remove('active');
     }
 
-    // Checkout
     async function submitOrder() {
       if (cart.length === 0) return;
 
@@ -894,7 +989,6 @@
 
       const delivery = document.getElementById('delivery-method').value;
       const comment = document.getElementById('customer-comment').value.trim();
-
       const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
       const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
