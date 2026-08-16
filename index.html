@@ -192,7 +192,6 @@
       color: #12100e;
     }
 
-    /* Floating Cart Bar */
     .cart-bar {
       position: fixed;
       bottom: 16px;
@@ -228,7 +227,6 @@
       margin-left: 8px;
     }
 
-    /* Modals */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -290,7 +288,6 @@
       cursor: pointer;
     }
 
-    /* Gallery styles for Product Modal */
     .gallery-wrapper {
       display: flex;
       gap: 10px;
@@ -341,13 +338,13 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border-color);
     }
 
     .cart-item-img {
-      width: 50px;
-      height: 50px;
+      width: 54px;
+      height: 54px;
       border-radius: 8px;
       object-fit: cover;
     }
@@ -361,11 +358,17 @@
       font-weight: 600;
     }
 
+    .cart-item-options {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
     .cart-item-price {
       font-size: 13px;
       font-weight: 700;
       color: var(--accent-color);
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     .qty-controls {
@@ -477,7 +480,7 @@
     <div id="cart-total">0 ₽</div>
   </div>
 
-  <!-- Modal: Product Detailed View -->
+  <!-- Modal: Product Detailed View with Customization -->
   <div class="modal-overlay" id="product-detail-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -493,13 +496,31 @@
         <p id="detail-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
       </div>
 
-      <button class="checkout-btn" id="detail-add-btn" style="margin-top: 10px;">
+      <!-- Individual Options -->
+      <div class="form-group">
+        <label class="form-label">Цвет кожи для этого изделия:</label>
+        <select class="form-select" id="item-color-select"></select>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="item-engraving-check" onchange="toggleItemEngraving()">
+          <label for="item-engraving-check">Персональная гравировка (+500 ₽)</label>
+        </div>
+      </div>
+
+      <div class="form-group" id="item-engraving-group" style="display: none;">
+        <label class="form-label">Текст/инициалы для гравировки:</label>
+        <input type="text" class="form-input" id="item-engraving-text" placeholder="Например: А.С.">
+      </div>
+
+      <button class="checkout-btn" id="detail-add-btn" style="margin-top: 16px;">
         + Добавить в корзину
       </button>
     </div>
   </div>
 
-  <!-- Modal: Cart & Checkout -->
+  <!-- Modal: Cart & Delivery Details -->
   <div class="modal-overlay" id="cart-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -508,28 +529,6 @@
       </div>
 
       <div id="cart-items-container"></div>
-
-      <div class="form-group">
-        <label class="form-label">Цвет кожи для всех изделий:</label>
-        <select class="form-select" id="leather-color">
-          <option value="Коньячный (Рыжий)">Коньячный (Рыжий)</option>
-          <option value="Темно-коричневый (Шоколад)">Темно-коричневый (Шоколад)</option>
-          <option value="Черный матовый">Черный матовый</option>
-          <option value="Изумрудный (Зеленый)">Изумрудный</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <div class="checkbox-group">
-          <input type="checkbox" id="engraving-check" onchange="toggleEngravingInput()">
-          <label for="engraving-check">Добавить персональную гравировку (+500 ₽)</label>
-        </div>
-      </div>
-
-      <div class="form-group" id="engraving-text-group" style="display: none;">
-        <label class="form-label">Текст или инициалы для гравировки:</label>
-        <input type="text" class="form-input" id="engraving-text" placeholder="Например: А.С. или Happy Birthday">
-      </div>
 
       <div class="form-group">
         <label class="form-label">Способ получения:</label>
@@ -556,34 +555,21 @@
   </div>
 
   <script>
-    const tg = window.Telegram ? window.Telegram.WebApp : null;
-    if (tg) {
-      tg.expand();
-      tg.ready();
-    }
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
-    // ================= НАСТРОЙКИ (ВСТАВЬ СВОИ ДАННЫЕ) =================
     const BOT_TOKEN = "8736449894:AAE6MmYnPSemwRFRAFUUXRiM2tFSvUaiScY";
-    const ADMIN_ID = "1096196094"; 
-    // ==================================================================
+    const ADMIN_ID = "1096196094";
 
-    // Список товаров. Можно указывать несколько ссылок на фото в массиве images
+    // Базовые цвета кожи по умолчанию
+    const DEFAULT_COLORS = [
+      "Коньячный (Рыжий)",
+      "Темно-коричневый (Шоколад)",
+      "Черный матовый",
+      "Изумрудный (Зеленый)"
+    ];
+
+    // Список товаров. Можно задать customColors для определенной позиции!
     const products = [
-		{ 
-        id: 101, 
-        category: 'accessories', 
-        name: 'Обложка Classic Driver', 
-        price: 9000, 
-        desc: 'Обложка для документов из бархатистой кожи. 3 отдела для паспорта и ПТС. 3 отдела под карты и водительское удостоверение. Удобная кнопка, чтобы не потерять важное. Ручной седельный шов вощеной нитью.', 
-        images: [
-			'./images/oblozhkaV1/img1.webp',
-			'./images/oblozhkaV1/img2.webp',
-			'./images/oblozhkaV1/img3.webp',
-			'./images/oblozhkaV1/img4.webp',
-			'./images/oblozhkaV1/img6.webp'
-			
-        ]
-      },
       { 
         id: 101, 
         category: 'wallets', 
@@ -591,9 +577,10 @@
         price: 4500, 
         desc: 'Классический кошелек из плотной кожи растительного дубления. 4 отдела под карты и вместительный отсек для купюр. Ручной седельный шов вощеной нитью.', 
         images: [
-          './images/oblozhkaV1/img1.webp',
-		  './images/oblozhkaV1/img2.webp'
-        ]
+          './images/img2.webp',
+          './images/oblozhkaV1/img2.webp'
+        ],
+        colors: ["Коньячный (Рыжий)", "Черный матовый", "Бордовый Crazy Horse"] // Свои цвета для бифолда
       },
       { 
         id: 102, 
@@ -601,9 +588,7 @@
         name: 'Картхолдер «Slim Leather»', 
         price: 2200, 
         desc: 'Компактный зажим для 6 карт и наличных. Ручной седельный шов. Не утолщает карман.', 
-        images: [
-          'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80']
       },
       { 
         id: 103, 
@@ -611,20 +596,15 @@
         name: 'Лонгволлет «Traveler»', 
         price: 6800, 
         desc: 'Вместительный портмоне для паспорта, телефона, карт и авиабилетов. Закрывается на надежные латунные кнопки.', 
-        images: [
-          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
       },
-
       { 
         id: 201, 
         category: 'bags', 
         name: 'Сумка-мессенджер «Urban»', 
         price: 14500, 
         desc: 'Наплечная сумка под ноутбук 14" и документы А4. Литая латунная фурнитура, плотный подклад.', 
-        images: [
-          'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80']
       },
       { 
         id: 202, 
@@ -632,9 +612,7 @@
         name: 'Рюкзак «Heritage»', 
         price: 18900, 
         desc: 'Рюкзак из толстой кожи растительного дубления с усиленными мягкими лямками и внутренним карманом для гаджетов.', 
-        images: [
-          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80']
       },
       { 
         id: 203, 
@@ -642,20 +620,15 @@
         name: 'Поясная сумка «Bumbag»', 
         price: 7200, 
         desc: 'Стильная кросс-боди сумка для прогулок и путешествий. Прочный регулируемый кожаный ремень.', 
-        images: [
-          'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80']
       },
-
       { 
         id: 301, 
         category: 'accessories', 
         name: 'Ремень «Brass Buckle»', 
         price: 4800, 
         desc: 'Ремень из цельной ременной полосы чепрака 4 мм с массивной литой латунной пряжкой.', 
-        images: [
-          'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=600&q=80']
       },
       { 
         id: 302, 
@@ -663,9 +636,7 @@
         name: 'Обложка для автодокументов', 
         price: 3400, 
         desc: 'Комплексный органайзер для паспорта, СТС, водительского удостоверения и страхового полиса.', 
-        images: [
-          'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80']
       },
       { 
         id: 303, 
@@ -673,20 +644,16 @@
         name: 'Ключница «Key Holder»', 
         price: 1900, 
         desc: 'Компактный футляр для ключей. Надежно защитит экран телефона и ткань карманов от царапин.', 
-        images: [
-          'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80']
       },
-
       { 
         id: 401, 
         category: 'adult', 
         name: 'Портупея «Elegance»', 
         price: 5500, 
         desc: 'Изящная кожаная портупея из мягкой премиальной юфти с индивидуальной подгонкой по фигуре.', 
-        images: [
-          'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80'],
+        colors: ["Черный матовый", "Красный глубокий", "Шоколад"]
       },
       { 
         id: 402, 
@@ -694,9 +661,7 @@
         name: 'Чокер с кольцом «Minimal»', 
         price: 2500, 
         desc: 'Аккуратный чокер из гладкой кожи с литым цельным кольцом и надежной застежкой.', 
-        images: [
-          'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80']
       },
       { 
         id: 403, 
@@ -704,13 +669,12 @@
         name: 'Кожаный флоггер «Craft»', 
         price: 6200, 
         desc: 'Идеально сбалансированный флоггер из мягких хвостов с удобной деревянной рукоятью в коже.', 
-        images: [
-          'https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=600&q=80'
-        ]
+        images: ['https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=600&q=80']
       }
     ];
 
     let cart = [];
+    let currentModalProduct = null;
 
     function renderProducts(filter = 'all') {
       const grid = document.getElementById('products-grid');
@@ -731,7 +695,7 @@
             <div class="product-title" onclick="openProductModal(${p.id})">${p.name}</div>
             <div class="product-desc">${p.desc}</div>
             <div class="product-price">${p.price.toLocaleString()} ₽</div>
-            <button class="add-btn" onclick="addToCart(${p.id})">+ В корзину</button>
+            <button class="add-btn" onclick="openProductModal(${p.id})">Выбрать и заказать</button>
           </div>
         `;
         grid.appendChild(card);
@@ -754,15 +718,27 @@
       renderProducts(cat);
     }
 
-    // Modal Product Details with Gallery
+    // Modal Product Details
     function openProductModal(productId) {
       const p = products.find(item => item.id === productId);
       if (!p) return;
+      currentModalProduct = p;
 
       document.getElementById('detail-title').textContent = p.name;
       document.getElementById('detail-price').textContent = `${p.price.toLocaleString()} ₽`;
       document.getElementById('detail-desc').textContent = p.desc;
 
+      // Заполняем доступные цвета для конкретного изделия
+      const colorSelect = document.getElementById('item-color-select');
+      const itemColors = p.colors && p.colors.length > 0 ? p.colors : DEFAULT_COLORS;
+      colorSelect.innerHTML = itemColors.map(c => `<option value="${c}">${c}</option>`).join('');
+
+      // Сброс полей гравировки
+      document.getElementById('item-engraving-check').checked = false;
+      document.getElementById('item-engraving-group').style.display = 'none';
+      document.getElementById('item-engraving-text').value = '';
+
+      // Галерея
       const gallery = document.getElementById('detail-gallery');
       const dotsContainer = document.getElementById('gallery-dots');
       const imgs = p.images && p.images.length > 0 ? p.images : [];
@@ -783,8 +759,7 @@
 
       const addBtn = document.getElementById('detail-add-btn');
       addBtn.onclick = () => {
-        addToCart(p.id);
-        closeProductModal();
+        addItemWithCustomization();
       };
 
       document.getElementById('product-detail-modal').classList.add('active');
@@ -792,26 +767,53 @@
 
     function closeProductModal() {
       document.getElementById('product-detail-modal').classList.remove('active');
+      currentModalProduct = null;
     }
 
-    // Cart Handlers
-    function addToCart(productId) {
-      const item = cart.find(i => i.id === productId);
-      if (item) {
-        item.qty += 1;
+    function toggleItemEngraving() {
+      const check = document.getElementById('item-engraving-check');
+      document.getElementById('item-engraving-group').style.display = check.checked ? 'block' : 'none';
+    }
+
+    // Добавление позиции с выбранными опциями
+    function addItemWithCustomization() {
+      if (!currentModalProduct) return;
+
+      const color = document.getElementById('item-color-select').value;
+      const hasEngraving = document.getElementById('item-engraving-check').checked;
+      const engravingText = hasEngraving ? document.getElementById('item-engraving-text').value.trim() : null;
+
+      const unitPrice = currentModalProduct.price + (hasEngraving ? 500 : 0);
+      
+      // Уникальный ключ позиции (чтобы отличать один и тот же кошелек разных цветов)
+      const cartKey = `${currentModalProduct.id}_${color}_${hasEngraving ? (engravingText || 'yes') : 'none'}`;
+
+      const existing = cart.find(i => i.cartKey === cartKey);
+      if (existing) {
+        existing.qty += 1;
       } else {
-        const product = products.find(p => p.id === productId);
-        cart.push({ ...product, qty: 1 });
+        cart.push({
+          cartKey: cartKey,
+          id: currentModalProduct.id,
+          name: currentModalProduct.name,
+          image: (currentModalProduct.images && currentModalProduct.images[0]) || '',
+          price: unitPrice,
+          color: color,
+          engraving: engravingText || (hasEngraving ? 'Да' : null),
+          qty: 1
+        });
       }
+
       updateCartUI();
+      closeProductModal();
       if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
-    function changeQty(productId, delta) {
-      const item = cart.find(i => i.id === productId);
+    function changeQtyByKey(cartKey, delta) {
+      const item = cart.find(i => i.cartKey === cartKey);
       if (item) {
         item.qty += delta;
-        if (item.qty <= 0) cart = cart.filter(i => i.id !== productId);
+        if (item.qty <= 0) cart = cart.filter(i => i.cartKey !== cartKey);
       }
       updateCartUI();
       renderCartItems();
@@ -845,15 +847,19 @@
 
       container.innerHTML = cart.map(item => `
         <div class="cart-item">
-          <img class="cart-item-img" src="${(item.images && item.images[0]) || ''}" alt="${item.name}">
+          <img class="cart-item-img" src="${item.image}" alt="${item.name}">
           <div class="cart-item-details">
             <div class="cart-item-title">${item.name}</div>
+            <div class="cart-item-options">
+              🎨 ${item.color}
+              ${item.engraving ? `<br>✍️ Гравировка: "${item.engraving}"` : ''}
+            </div>
             <div class="cart-item-price">${(item.price * item.qty).toLocaleString()} ₽</div>
           </div>
           <div class="qty-controls">
-            <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
+            <button class="qty-btn" onclick="changeQtyByKey('${item.cartKey}', -1)">-</button>
             <span>${item.qty}</span>
-            <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+            <button class="qty-btn" onclick="changeQtyByKey('${item.cartKey}', 1)">+</button>
           </div>
         </div>
       `).join('');
@@ -868,12 +874,7 @@
       document.getElementById('cart-modal').classList.remove('active');
     }
 
-    function toggleEngravingInput() {
-      const check = document.getElementById('engraving-check');
-      document.getElementById('engraving-text-group').style.display = check.checked ? 'block' : 'none';
-    }
-
-    // Checkout and Send message to Bot
+    // Checkout
     async function submitOrder() {
       if (cart.length === 0) return;
 
@@ -888,14 +889,10 @@
       btn.disabled = true;
       btn.textContent = 'Отправка...';
 
-      const color = document.getElementById('leather-color').value;
-      const hasEngraving = document.getElementById('engraving-check').checked;
-      const engravingText = document.getElementById('engraving-text').value.trim();
       const delivery = document.getElementById('delivery-method').value;
       const comment = document.getElementById('customer-comment').value.trim();
 
-      let itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-      if (hasEngraving) itemsTotal += 500;
+      const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
       const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
       const userName = user ? (user.username ? `@${user.username}` : user.first_name) : "Неизвестный";
@@ -903,15 +900,16 @@
 
       let messageText = `🔥 <b>НОВЫЙ ЗАКАЗ (KOZHEDELNIKOV)!</b>\n\n`;
       messageText += `📋 <b>Состав заказа:</b>\n`;
+      
       cart.forEach((item, idx) => {
-        messageText += `${idx + 1}. ${item.name} — ${item.qty} шт. (${(item.price * item.qty).toLocaleString()} ₽)\n`;
+        messageText += `\n${idx + 1}. <b>${item.name}</b> — ${item.qty} шт. (${(item.price * item.qty).toLocaleString()} ₽)\n`;
+        messageText += `   🎨 Цвет: ${item.color}\n`;
+        if (item.engraving) {
+          messageText += `   ✍️ Гравировка: <i>${item.engraving}</i>\n`;
+        }
       });
 
-      messageText += `\n🎨 <b>Цвет кожи:</b> ${color}\n`;
-      if (hasEngraving) {
-        messageText += `✍️ <b>Гравировка (+500 ₽):</b> ${engravingText || 'Да (без текста)'}\n`;
-      }
-      messageText += `🚚 <b>Доставка:</b> ${delivery}\n`;
+      messageText += `\n🚚 <b>Доставка:</b> ${delivery}\n`;
       messageText += `📞 <b>Телефон:</b> <code>${phone}</code>\n`;
       if (comment) messageText += `💬 <b>Комментарий:</b> ${comment}\n`;
       messageText += `\n💰 <b>ИТОГО К ОПЛАТЕ:</b> <b>${itemsTotal.toLocaleString()} ₽</b>\n\n`;
@@ -945,7 +943,7 @@
         }
       } catch (err) {
         console.error(err);
-        if (tg && tg.showAlert) tg.showAlert('Ошибка при отправке заказа. Проверьте подключение к сети.');
+        if (tg && tg.showAlert) tg.showAlert('Ошибка при отправке заказа.');
         else alert('Ошибка при отправке заказа.');
       } finally {
         btn.disabled = false;
@@ -953,7 +951,15 @@
       }
     }
 
-    renderProducts();
+    document.addEventListener('DOMContentLoaded', () => {
+      if (tg) {
+        try {
+          tg.ready();
+          tg.expand();
+        } catch (e) {}
+      }
+      renderProducts();
+    });
   </script>
 </body>
 </html>
