@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Kozhedelnikov | Мастерская кожаных изделий</title>
-  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Google Fonts: Inter & Playfair Display -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
@@ -20,8 +18,6 @@
       --text-main: #fefae0;
       --text-muted: #a39e93;
       --border-color: #332b25;
-      --badge-bg: #2b221b;
-      --danger-color: #e63946;
       --radius: 16px;
     }
 
@@ -40,7 +36,6 @@
       line-height: 1.4;
     }
 
-    /* Header */
     header {
       padding: 20px 16px 12px;
       background: linear-gradient(180deg, #1c1815 0%, #12100e 100%);
@@ -69,7 +64,6 @@
       margin-bottom: 16px;
     }
 
-    /* Categories Tabs */
     .categories-wrapper {
       display: flex;
       gap: 8px;
@@ -102,7 +96,6 @@
       font-weight: 600;
     }
 
-    /* Main Product Grid */
     .container {
       padding: 16px;
     }
@@ -120,7 +113,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      transition: transform 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.2s ease;
     }
 
     .product-card:active {
@@ -197,7 +190,6 @@
       color: #12100e;
     }
 
-    /* Floating Cart Bar */
     .cart-bar {
       position: fixed;
       bottom: 16px;
@@ -233,7 +225,6 @@
       margin-left: 8px;
     }
 
-    /* Modals (Cart & Product Details) */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -295,7 +286,6 @@
       cursor: pointer;
     }
 
-    /* Cart Items List */
     .cart-item {
       display: flex;
       align-items: center;
@@ -318,11 +308,6 @@
     .cart-item-title {
       font-size: 13px;
       font-weight: 600;
-    }
-
-    .cart-item-sub {
-      font-size: 11px;
-      color: var(--text-muted);
     }
 
     .cart-item-price {
@@ -352,7 +337,6 @@
       text-align: center;
     }
 
-    /* Form Options */
     .form-group {
       margin-top: 14px;
     }
@@ -399,6 +383,11 @@
       font-size: 15px;
       margin-top: 20px;
       cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .checkout-btn:active {
+      opacity: 0.8;
     }
 
     .empty-cart-msg {
@@ -411,12 +400,10 @@
 </head>
 <body>
 
-  <!-- Header -->
   <header>
     <div class="brand-title">KOZHEDELNIKOV</div>
     <div class="brand-subtitle">Leather Craft & Accessories</div>
 
-    <!-- Category Filter Tabs -->
     <div class="categories-wrapper">
       <button class="category-btn active" onclick="filterCategory('all', this)">Все товары</button>
       <button class="category-btn" onclick="filterCategory('wallets', this)">Кошельки</button>
@@ -426,14 +413,10 @@
     </div>
   </header>
 
-  <!-- Products Showcase -->
   <div class="container">
-    <div class="products-grid" id="products-grid">
-      <!-- Products will be injected by JavaScript -->
-    </div>
+    <div class="products-grid" id="products-grid"></div>
   </div>
 
-  <!-- Floating Cart Bar -->
   <div class="cart-bar" id="cart-bar" onclick="openCartModal()">
     <div>
       <span>Корзина</span>
@@ -442,7 +425,6 @@
     <div id="cart-total">0 ₽</div>
   </div>
 
-  <!-- Cart Modal -->
   <div class="modal-overlay" id="cart-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -450,14 +432,12 @@
         <button class="close-btn" onclick="closeCartModal()">&times;</button>
       </div>
 
-      <div id="cart-items-container">
-        <!-- Cart Items Injection -->
-      </div>
+      <div id="cart-items-container"></div>
 
       <div class="form-group">
         <label class="form-label">Цвет кожи для всех изделий:</label>
         <select class="form-select" id="leather-color">
-          <option value="Коньячный (Рыжий)">Коньячный (Классика)</option>
+          <option value="Коньячный (Рыжий)">Коньячный (Рыжий)</option>
           <option value="Темно-коричневый (Шоколад)">Темно-коричневый (Шоколад)</option>
           <option value="Черный матовый">Черный матовый</option>
           <option value="Изумрудный (Зеленый)">Изумрудный</option>
@@ -496,132 +476,42 @@
         <input type="text" class="form-input" id="customer-comment" placeholder="Город, адрес ПВЗ или пожелания">
       </div>
 
-      <button class="checkout-btn" onclick="submitOrder()">Оформить заказ</button>
+      <button class="checkout-btn" id="submit-btn" onclick="submitOrder()">Оформить заказ</button>
     </div>
   </div>
 
   <script>
-    // Инициализация Telegram WebApp
     const tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) {
       tg.expand();
       tg.ready();
     }
 
-    // === КОНФИГУРАЦИЯ БОТА ===
-    // Вставь сюда актуальный токен бота для прямой отправки в чат
-    const BOT_TOKEN = "8123456789:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
+    // ================= НАСТРОЙКИ (ВСТАВЬ СВОИ ДАННЫЕ) =================
+    const BOT_TOKEN = "8736449894:AAE6MmYnPSemwRFRAFUUXRiM2tFSvUaiScY";
+    const ADMIN_ID = "1096196094"; // Цифровой ID Telegram (например: 123456789)
+    // ==================================================================
 
-    // Данные каталога
     const products = [
-      // КОШЕЛЬКИ
-      {
-        id: 101,
-        category: 'wallets',
-        name: 'Бифолд «Classic Craft»',
-        price: 4500,
-        desc: 'Классический кошелек из плотной кожи. 4 отдела под карты и отсек для купюр.',
-        image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 102,
-        category: 'wallets',
-        name: 'Картхолдер «Slim Leather»',
-        price: 2200,
-        desc: 'Компактный зажим для 6 карт и наличных. Ручной седельный шов.',
-        image: 'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 103,
-        category: 'wallets',
-        name: 'Лонгволлет «Traveler»',
-        price: 6800,
-        desc: 'Вместительный портмоне для паспорта, телефона, карт и авиабилетов.',
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80'
-      },
+      { id: 101, category: 'wallets', name: 'Бифолд «Classic Craft»', price: 4500, desc: 'Классический кошелек из плотной кожи. 4 отдела под карты и отсек для купюр.', image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80' },
+      { id: 102, category: 'wallets', name: 'Картхолдер «Slim Leather»', price: 2200, desc: 'Компактный зажим для 6 карт и наличных. Ручной седельный шов.', image: 'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=500&q=80' },
+      { id: 103, category: 'wallets', name: 'Лонгволлет «Traveler»', price: 6800, desc: 'Вместительный портмоне для паспорта, телефона, карт и авиабилетов.', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80' },
 
-      // СУМКИ
-      {
-        id: 201,
-        category: 'bags',
-        name: 'Сумка-мессенджер «Urban»',
-        price: 14500,
-        desc: 'Наплечная сумка под ноутбук 14" и документы. Латунная фурнитура.',
-        image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 202,
-        category: 'bags',
-        name: 'Рюкзак «Heritage»',
-        price: 18900,
-        desc: 'Рюкзак из толстой кожи растительного дубления с усиленными лямками.',
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 203,
-        category: 'bags',
-        name: 'Поясная сумка «Bumbag»',
-        price: 7200,
-        desc: 'Стильная кросс-боди сумка для прогулок. Прочный регулируемый ремень.',
-        image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=500&q=80'
-      },
+      { id: 201, category: 'bags', name: 'Сумка-мессенджер «Urban»', price: 14500, desc: 'Наплечная сумка под ноутбук 14" и документы. Латунная фурнитура.', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=500&q=80' },
+      { id: 202, category: 'bags', name: 'Рюкзак «Heritage»', price: 18900, desc: 'Рюкзак из толстой кожи растительного дубления с усиленными лямками.', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80' },
+      { id: 203, category: 'bags', name: 'Поясная сумка «Bumbag»', price: 7200, desc: 'Стильная кросс-боди сумка для прогулок. Прочный регулируемый ремень.', image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=500&q=80' },
 
-      // АКСЕССУАРЫ
-      {
-        id: 301,
-        category: 'accessories',
-        name: 'Ремень «Brass Buckle»',
-        price: 4800,
-        desc: 'Ремень из монолитной ременной полосы 4 мм с литой латунной пряжкой.',
-        image: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 302,
-        category: 'accessories',
-        name: 'Обложка для автодокументов',
-        price: 3400,
-        desc: 'Комплексный холдер для паспорта, стс, прав и банковских карт.',
-        image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 303,
-        category: 'accessories',
-        name: 'Ключница-тревел «Key Holder»',
-        price: 1900,
-        desc: 'Защитит экран телефона и карманы от царапин ключами.',
-        image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=80'
-      },
+      { id: 301, category: 'accessories', name: 'Ремень «Brass Buckle»', price: 4800, desc: 'Ремень из монолитной ременной полосы 4 мм с литой латунной пряжкой.', image: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=500&q=80' },
+      { id: 302, category: 'accessories', name: 'Обложка для автодокументов', price: 3400, desc: 'Комплексный холдер для паспорта, стс, прав и банковских карт.', image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=500&q=80' },
+      { id: 303, category: 'accessories', name: 'Ключница «Key Holder»', price: 1900, desc: 'Защитит экран телефона и карманы от царапин ключами.', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=80' },
 
-      // 18+
-      {
-        id: 401,
-        category: 'adult',
-        name: 'Портупея «Elegance»',
-        price: 5500,
-        desc: 'Иззящная кожаная портупея из мягкой юфти с подгонкой по фигуре.',
-        image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 402,
-        category: 'adult',
-        name: 'Чокер с кольцом «Minimal»',
-        price: 2500,
-        desc: 'Аккуратный чокер из премиальной кожи с литым латунным кольцом.',
-        image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=500&q=80'
-      },
-      {
-        id: 403,
-        category: 'adult',
-        name: 'Кожаный флоггер «Craft»',
-        price: 6200,
-        desc: 'Балансированный флоггер из мягких кожаных хвостов с резной рукоятью.',
-        image: 'https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=500&q=80'
-      }
+      { id: 401, category: 'adult', name: 'Портупея «Elegance»', price: 5500, desc: 'Изящная кожаная портупея из мягкой юфти с подгонкой по фигуре.', image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=500&q=80' },
+      { id: 402, category: 'adult', name: 'Чокер с кольцом «Minimal»', price: 2500, desc: 'Аккуратный чокер из премиальной кожи с литым латунным кольцом.', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=500&q=80' },
+      { id: 403, category: 'adult', name: 'Кожаный флоггер «Craft»', price: 6200, desc: 'Сбалансированный флоггер из мягких хвостов с резной рукоятью.', image: 'https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=500&q=80' }
     ];
 
     let cart = [];
 
-    // Рендер товаров
     function renderProducts(filter = 'all') {
       const grid = document.getElementById('products-grid');
       grid.innerHTML = '';
@@ -657,14 +547,12 @@
       }
     }
 
-    // Фильтрация
     function filterCategory(cat, btn) {
       document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderProducts(cat);
     }
 
-    // Добавление в корзину
     function addToCart(productId) {
       const item = cart.find(i => i.id === productId);
       if (item) {
@@ -674,26 +562,19 @@
         cart.push({ ...product, qty: 1 });
       }
       updateCartUI();
-      
-      if (tg && tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('light');
-      }
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
-    // Изменение количества
     function changeQty(productId, delta) {
       const item = cart.find(i => i.id === productId);
       if (item) {
         item.qty += delta;
-        if (item.qty <= 0) {
-          cart = cart.filter(i => i.id !== productId);
-        }
+        if (item.qty <= 0) cart = cart.filter(i => i.id !== productId);
       }
       updateCartUI();
       renderCartItems();
     }
 
-    // Обновление плавающей панели корзины
     function updateCartUI() {
       const cartBar = document.getElementById('cart-bar');
       const countEl = document.getElementById('cart-count');
@@ -713,7 +594,6 @@
       }
     }
 
-    // Отрисовка модального окна корзины
     function renderCartItems() {
       const container = document.getElementById('cart-items-container');
       if (cart.length === 0) {
@@ -748,19 +628,22 @@
 
     function toggleEngravingInput() {
       const check = document.getElementById('engraving-check');
-      const group = document.getElementById('engraving-text-group');
-      group.style.display = check.checked ? 'block' : 'none';
+      document.getElementById('engraving-text-group').style.display = check.checked ? 'block' : 'none';
     }
 
-    // Отправка заказа
-    function submitOrder() {
+    async function submitOrder() {
       if (cart.length === 0) return;
 
       const phone = document.getElementById('customer-phone').value.trim();
       if (!phone) {
-        alert('Пожалуйста, укажите ваш номер телефона.');
+        if (tg && tg.showAlert) tg.showAlert('Пожалуйста, укажите ваш номер телефона.');
+        else alert('Пожалуйста, укажите ваш номер телефона.');
         return;
       }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Отправка...';
 
       const color = document.getElementById('leather-color').value;
       const hasEngraving = document.getElementById('engraving-check').checked;
@@ -771,71 +654,65 @@
       let itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       if (hasEngraving) itemsTotal += 500;
 
-      // Формирование сообщения
-      let message = `📦 **НОВЫЙ ЗАКАЗ В МАГАЗИНЕ**\n\n`;
-      message += `📋 **Состав заказа:**\n`;
+      // Получение данных пользователя из Telegram
+      const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+      const userName = user ? (user.username ? `@${user.username}` : user.first_name) : "Неизвестный";
+      const userId = user ? user.id : "Не определен";
+
+      // Формирование HTML-сообщения
+      let messageText = `🔥 <b>НОВЫЙ ЗАКАЗ (KOZHEDELNIKOV)!</b>\n\n`;
+      messageText += `📋 <b>Состав заказа:</b>\n`;
       cart.forEach((item, idx) => {
-        message += `${idx + 1}. ${item.name} — ${item.qty} шт. x ${item.price} ₽\n`;
+        messageText += `${idx + 1}. ${item.name} — ${item.qty} шт. (${(item.price * item.qty).toLocaleString()} ₽)\n`;
       });
 
-      message += `\n🎨 **Цвет кожи:** ${color}\n`;
+      messageText += `\n🎨 <b>Цвет кожи:</b> ${color}\n`;
       if (hasEngraving) {
-        message += `✍️ **Гравировка (+500 ₽):** ${engravingText || 'Да (текст не указан)'}\n`;
+        messageText += `✍️ <b>Гравировка (+500 ₽):</b> ${engravingText || 'Да (без текста)'}\n`;
       }
-      message += `🚚 **Доставка:** ${delivery}\n`;
-      message += `📞 **Телефон:** ${phone}\n`;
-      if (comment) message += `💬 **Комментарий:** ${comment}\n`;
-      message += `\n💰 **ИТОГО:** ${itemsTotal.toLocaleString()} ₽`;
+      messageText += `🚚 <b>Доставка:</b> ${delivery}\n`;
+      messageText += `📞 <b>Телефон:</b> <code>${phone}</code>\n`;
+      if (comment) messageText += `💬 <b>Комментарий:</b> ${comment}\n`;
+      messageText += `\n💰 <b>ИТОГО К ОПЛАТЕ:</b> <b>${itemsTotal.toLocaleString()} ₽</b>\n\n`;
+      messageText += `👤 <b>Покупатель:</b> ${userName}\n`;
+      messageText += `🆔 <b>Telegram ID:</b> <code>${userId}</code>`;
 
-      // Отправка через WebApp sendData или обычным методом
-      if (tg && tg.initData) {
-        tg.sendData(JSON.stringify({
-          cart: cart,
-          color: color,
-          engraving: hasEngraving ? engravingText : null,
-          delivery: delivery,
-          phone: phone,
-          comment: comment,
-          total: itemsTotal
-        }));
-        tg.close();
-      } else {
-        alert('Заказ сформирован! Менеджер свяжется с вами по указанному номеру.');
-        cart = [];
-        updateCartUI();
-        closeCartModal();
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: ADMIN_ID,
+            text: messageText,
+            parse_mode: 'HTML'
+          })
+        });
+
+        if (response.ok) {
+          if (tg && tg.showAlert) {
+            tg.showAlert('✅ Заказ успешно оформлен! Мастер свяжется с вами для уточнения деталей.', () => {
+              tg.close();
+            });
+          } else {
+            alert('✅ Заказ успешно оформлен!');
+            cart = [];
+            updateCartUI();
+            closeCartModal();
+          }
+        } else {
+          throw new Error('Telegram API error');
+        }
+      } catch (err) {
+        console.error(err);
+        if (tg && tg.showAlert) tg.showAlert('Ошибка при отправке заказа. Проверьте подключение к сети.');
+        else alert('Ошибка при отправке заказа.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Оформить заказ';
       }
     }
 
-    // Первичный рендер
     renderProducts();
   </script>
 </body>
 </html>
-```eof
-
-### Что было добавлено и улучшено:
-
-1. **4 основные категории каталога:**
-   * **Кошельки:** Бифолд, Картхолдер, Лонгволлет.
-   * **Сумки:** Мессенджер, Рюкзак, Поясная сумка.
-   * **Аксессуары:** Ремень с литой латунной пряжкой, Обложка для автодокументов, Ключница.
-   * **18+:** Портупея, Чокер с латунным кольцом, Кожаный флоггер.
-
-2. **Кастомные опции для кожевенного ремесла:**
-   * **Выбор цвета кожи:** Коньячный, Шоколад, Черный матовый, Изумрудный.
-   * **Персональная гравировка (+500 ₽):** переключатель с полем для ввода инициалов или памятной фразы.
-
-3. **Интерактивность и UX:**
-   * Вкладки с быстрым фильтром категорий вверху страницы.
-   * Выплывающая плавающая кнопка корзины с подсчетом количества и суммы.
-   * Удобное окно оформления заказа прямо внутри приложения.
-
----
-
-### Как загрузить обновление на GitHub:
-1. Зайди в свой репозиторий `[github.com/sedelnikov141990/shop](https://github.com/sedelnikov141990/shop)`.
-2. Открой файл `index.html` ➔ нажми на иконку карандаша **Edit this file**.
-3. Замени весь код на новый код выше.
-4. Нажми **Commit changes**.
-5. Подожди 1 минуту и заходи в бота `t.me/Kozhedelnikov_bot/shop` — обновленный каталог сразу заработает!
