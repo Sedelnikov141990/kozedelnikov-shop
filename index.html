@@ -887,7 +887,7 @@
       const hasEngraving = document.getElementById('item-engraving-check').checked;
       const engravingText = hasEngraving ? document.getElementById('item-engraving-text').value.trim() : null;
 
-      const unitPrice = currentModalProduct.price + (hasEngraving ? 500 : 0);
+      const unitPrice = currentModalProduct.price + (hasEngraving ? 950 : 0);
       const cartKey = `${currentModalProduct.id}_${colorName}_${hasEngraving ? (engravingText || 'yes') : 'none'}`;
 
       const existing = cart.find(i => i.cartKey === cartKey);
