@@ -125,6 +125,7 @@
       aspect-ratio: 1 / 1;
       object-fit: cover;
       background-color: #26201b;
+      cursor: pointer;
     }
 
     .product-info {
@@ -152,6 +153,7 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
       height: 38px;
+      cursor: pointer;
     }
 
     .product-desc {
@@ -190,6 +192,7 @@
       color: #12100e;
     }
 
+    /* Floating Cart Bar */
     .cart-bar {
       position: fixed;
       bottom: 16px;
@@ -225,6 +228,7 @@
       margin-left: 8px;
     }
 
+    /* Modals */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -274,7 +278,7 @@
 
     .modal-title {
       font-family: 'Playfair Display', serif;
-      font-size: 20px;
+      font-size: 18px;
       color: var(--accent-color);
     }
 
@@ -284,6 +288,53 @@
       color: var(--text-muted);
       font-size: 24px;
       cursor: pointer;
+    }
+
+    /* Gallery styles for Product Modal */
+    .gallery-wrapper {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+    }
+
+    .gallery-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    .gallery-wrapper img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      border-radius: var(--radius);
+      background-color: #26201b;
+    }
+
+    .gallery-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border-color);
+      transition: all 0.2s;
+    }
+
+    .dot.active {
+      background: var(--accent-color);
+      width: 16px;
+      border-radius: 10px;
     }
 
     .cart-item {
@@ -417,6 +468,7 @@
     <div class="products-grid" id="products-grid"></div>
   </div>
 
+  <!-- Floating Cart Bar -->
   <div class="cart-bar" id="cart-bar" onclick="openCartModal()">
     <div>
       <span>Корзина</span>
@@ -425,6 +477,29 @@
     <div id="cart-total">0 ₽</div>
   </div>
 
+  <!-- Modal: Product Detailed View -->
+  <div class="modal-overlay" id="product-detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="detail-title">Изделие</div>
+        <button class="close-btn" onclick="closeProductModal()">&times;</button>
+      </div>
+
+      <div class="gallery-wrapper" id="detail-gallery"></div>
+      <div class="gallery-dots" id="gallery-dots"></div>
+
+      <div style="padding: 10px 0;">
+        <div class="product-price" id="detail-price" style="font-size: 18px; margin-bottom: 8px;"></div>
+        <p id="detail-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
+      </div>
+
+      <button class="checkout-btn" id="detail-add-btn" style="margin-top: 10px;">
+        + Добавить в корзину
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Cart & Checkout -->
   <div class="modal-overlay" id="cart-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -489,25 +564,135 @@
 
     // ================= НАСТРОЙКИ (ВСТАВЬ СВОИ ДАННЫЕ) =================
     const BOT_TOKEN = "8736449894:AAE6MmYnPSemwRFRAFUUXRiM2tFSvUaiScY";
-    const ADMIN_ID = "1096196094"; // Цифровой ID Telegram (например: 123456789)
+    const ADMIN_ID = "1096196094"; 
     // ==================================================================
 
+    // Список товаров. Можно указывать несколько ссылок на фото в массиве images
     const products = [
-      { id: 101, category: 'wallets', name: 'Бифолд «Classic Craft»', price: 4500, desc: 'Классический кошелек из плотной кожи. 4 отдела под карты и отсек для купюр.', image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80' },
-      { id: 102, category: 'wallets', name: 'Картхолдер «Slim Leather»', price: 2200, desc: 'Компактный зажим для 6 карт и наличных. Ручной седельный шов.', image: 'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=500&q=80' },
-      { id: 103, category: 'wallets', name: 'Лонгволлет «Traveler»', price: 6800, desc: 'Вместительный портмоне для паспорта, телефона, карт и авиабилетов.', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80' },
+      { 
+        id: 101, 
+        category: 'wallets', 
+        name: 'Бифолд «Classic Craft»', 
+        price: 4500, 
+        desc: 'Классический кошелек из плотной кожи растительного дубления. 4 отдела под карты и вместительный отсек для купюр. Ручной седельный шов вощеной нитью.', 
+        images: [
+          'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 102, 
+        category: 'wallets', 
+        name: 'Картхолдер «Slim Leather»', 
+        price: 2200, 
+        desc: 'Компактный зажим для 6 карт и наличных. Ручной седельный шов. Не утолщает карман.', 
+        images: [
+          'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 103, 
+        category: 'wallets', 
+        name: 'Лонгволлет «Traveler»', 
+        price: 6800, 
+        desc: 'Вместительный портмоне для паспорта, телефона, карт и авиабилетов. Закрывается на надежные латунные кнопки.', 
+        images: [
+          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
 
-      { id: 201, category: 'bags', name: 'Сумка-мессенджер «Urban»', price: 14500, desc: 'Наплечная сумка под ноутбук 14" и документы. Латунная фурнитура.', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=500&q=80' },
-      { id: 202, category: 'bags', name: 'Рюкзак «Heritage»', price: 18900, desc: 'Рюкзак из толстой кожи растительного дубления с усиленными лямками.', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=500&q=80' },
-      { id: 203, category: 'bags', name: 'Поясная сумка «Bumbag»', price: 7200, desc: 'Стильная кросс-боди сумка для прогулок. Прочный регулируемый ремень.', image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=500&q=80' },
+      { 
+        id: 201, 
+        category: 'bags', 
+        name: 'Сумка-мессенджер «Urban»', 
+        price: 14500, 
+        desc: 'Наплечная сумка под ноутбук 14" и документы А4. Литая латунная фурнитура, плотный подклад.', 
+        images: [
+          'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 202, 
+        category: 'bags', 
+        name: 'Рюкзак «Heritage»', 
+        price: 18900, 
+        desc: 'Рюкзак из толстой кожи растительного дубления с усиленными мягкими лямками и внутренним карманом для гаджетов.', 
+        images: [
+          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 203, 
+        category: 'bags', 
+        name: 'Поясная сумка «Bumbag»', 
+        price: 7200, 
+        desc: 'Стильная кросс-боди сумка для прогулок и путешествий. Прочный регулируемый кожаный ремень.', 
+        images: [
+          'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
 
-      { id: 301, category: 'accessories', name: 'Ремень «Brass Buckle»', price: 4800, desc: 'Ремень из монолитной ременной полосы 4 мм с литой латунной пряжкой.', image: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=500&q=80' },
-      { id: 302, category: 'accessories', name: 'Обложка для автодокументов', price: 3400, desc: 'Комплексный холдер для паспорта, стс, прав и банковских карт.', image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=500&q=80' },
-      { id: 303, category: 'accessories', name: 'Ключница «Key Holder»', price: 1900, desc: 'Защитит экран телефона и карманы от царапин ключами.', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=80' },
+      { 
+        id: 301, 
+        category: 'accessories', 
+        name: 'Ремень «Brass Buckle»', 
+        price: 4800, 
+        desc: 'Ремень из цельной ременной полосы чепрака 4 мм с массивной литой латунной пряжкой.', 
+        images: [
+          'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 302, 
+        category: 'accessories', 
+        name: 'Обложка для автодокументов', 
+        price: 3400, 
+        desc: 'Комплексный органайзер для паспорта, СТС, водительского удостоверения и страхового полиса.', 
+        images: [
+          'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 303, 
+        category: 'accessories', 
+        name: 'Ключница «Key Holder»', 
+        price: 1900, 
+        desc: 'Компактный футляр для ключей. Надежно защитит экран телефона и ткань карманов от царапин.', 
+        images: [
+          'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
 
-      { id: 401, category: 'adult', name: 'Портупея «Elegance»', price: 5500, desc: 'Изящная кожаная портупея из мягкой юфти с подгонкой по фигуре.', image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=500&q=80' },
-      { id: 402, category: 'adult', name: 'Чокер с кольцом «Minimal»', price: 2500, desc: 'Аккуратный чокер из премиальной кожи с литым латунным кольцом.', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=500&q=80' },
-      { id: 403, category: 'adult', name: 'Кожаный флоггер «Craft»', price: 6200, desc: 'Сбалансированный флоггер из мягких хвостов с резной рукоятью.', image: 'https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=500&q=80' }
+      { 
+        id: 401, 
+        category: 'adult', 
+        name: 'Портупея «Elegance»', 
+        price: 5500, 
+        desc: 'Изящная кожаная портупея из мягкой премиальной юфти с индивидуальной подгонкой по фигуре.', 
+        images: [
+          'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 402, 
+        category: 'adult', 
+        name: 'Чокер с кольцом «Minimal»', 
+        price: 2500, 
+        desc: 'Аккуратный чокер из гладкой кожи с литым цельным кольцом и надежной застежкой.', 
+        images: [
+          'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80'
+        ]
+      },
+      { 
+        id: 403, 
+        category: 'adult', 
+        name: 'Кожаный флоггер «Craft»', 
+        price: 6200, 
+        desc: 'Идеально сбалансированный флоггер из мягких хвостов с удобной деревянной рукоятью в коже.', 
+        images: [
+          'https://images.unsplash.com/photo-1516762689617-e1cffffd478d?auto=format&fit=crop&w=600&q=80'
+        ]
+      }
     ];
 
     let cart = [];
@@ -521,13 +706,14 @@
         : products.filter(p => p.category === filter);
 
       filtered.forEach(p => {
+        const coverImg = (p.images && p.images.length > 0) ? p.images[0] : '';
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
-          <img class="product-img" src="${p.image}" alt="${p.name}" loading="lazy">
+          <img class="product-img" src="${coverImg}" alt="${p.name}" loading="lazy" onclick="openProductModal(${p.id})">
           <div class="product-info">
             <div class="product-category-tag">${getCategoryName(p.category)}</div>
-            <div class="product-title">${p.name}</div>
+            <div class="product-title" onclick="openProductModal(${p.id})">${p.name}</div>
             <div class="product-desc">${p.desc}</div>
             <div class="product-price">${p.price.toLocaleString()} ₽</div>
             <button class="add-btn" onclick="addToCart(${p.id})">+ В корзину</button>
@@ -542,7 +728,7 @@
         case 'wallets': return 'Кошельки';
         case 'bags': return 'Сумки';
         case 'accessories': return 'Аксессуары';
-        case 'adult': return 'Изделия 18+';
+        case 'adult': return '18+';
         default: return 'Изделие';
       }
     }
@@ -553,6 +739,47 @@
       renderProducts(cat);
     }
 
+    // Modal Product Details with Gallery
+    function openProductModal(productId) {
+      const p = products.find(item => item.id === productId);
+      if (!p) return;
+
+      document.getElementById('detail-title').textContent = p.name;
+      document.getElementById('detail-price').textContent = `${p.price.toLocaleString()} ₽`;
+      document.getElementById('detail-desc').textContent = p.desc;
+
+      const gallery = document.getElementById('detail-gallery');
+      const dotsContainer = document.getElementById('gallery-dots');
+      const imgs = p.images && p.images.length > 0 ? p.images : [];
+
+      gallery.innerHTML = imgs.map((src, idx) => `
+        <img src="${src}" alt="${p.name} - ракурс ${idx + 1}" loading="lazy">
+      `).join('');
+
+      dotsContainer.innerHTML = imgs.length > 1 
+        ? imgs.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}"></div>`).join('')
+        : '';
+
+      gallery.onscroll = () => {
+        const scrollIndex = Math.round(gallery.scrollLeft / gallery.clientWidth);
+        const dots = dotsContainer.querySelectorAll('.dot');
+        dots.forEach((d, i) => d.classList.toggle('active', i === scrollIndex));
+      };
+
+      const addBtn = document.getElementById('detail-add-btn');
+      addBtn.onclick = () => {
+        addToCart(p.id);
+        closeProductModal();
+      };
+
+      document.getElementById('product-detail-modal').classList.add('active');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-detail-modal').classList.remove('active');
+    }
+
+    // Cart Handlers
     function addToCart(productId) {
       const item = cart.find(i => i.id === productId);
       if (item) {
@@ -603,7 +830,7 @@
 
       container.innerHTML = cart.map(item => `
         <div class="cart-item">
-          <img class="cart-item-img" src="${item.image}" alt="${item.name}">
+          <img class="cart-item-img" src="${(item.images && item.images[0]) || ''}" alt="${item.name}">
           <div class="cart-item-details">
             <div class="cart-item-title">${item.name}</div>
             <div class="cart-item-price">${(item.price * item.qty).toLocaleString()} ₽</div>
@@ -631,6 +858,7 @@
       document.getElementById('engraving-text-group').style.display = check.checked ? 'block' : 'none';
     }
 
+    // Checkout and Send message to Bot
     async function submitOrder() {
       if (cart.length === 0) return;
 
@@ -654,12 +882,10 @@
       let itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       if (hasEngraving) itemsTotal += 500;
 
-      // Получение данных пользователя из Telegram
       const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
       const userName = user ? (user.username ? `@${user.username}` : user.first_name) : "Неизвестный";
       const userId = user ? user.id : "Не определен";
 
-      // Формирование HTML-сообщения
       let messageText = `🔥 <b>НОВЫЙ ЗАКАЗ (KOZHEDELNIKOV)!</b>\n\n`;
       messageText += `📋 <b>Состав заказа:</b>\n`;
       cart.forEach((item, idx) => {
