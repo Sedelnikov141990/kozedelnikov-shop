@@ -61,7 +61,26 @@
       text-align: center;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+    }
+
+    /* Currency selector */
+    .currency-bar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .currency-select {
+      background: var(--card-bg);
+      color: var(--accent-color);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
     }
 
     .categories-wrapper {
@@ -459,6 +478,15 @@
     <div class="brand-title">KOZHEDELNIKOV</div>
     <div class="brand-subtitle">Leather Craft & Accessories</div>
 
+    <!-- Currency Selector -->
+    <div class="currency-bar">
+      <select class="currency-select" id="currency-select" onchange="changeCurrency(this.value)">
+        <option value="RUB">₽ (RUB)</option>
+        <option value="USD">$ (USD)</option>
+        <option value="BRL">R$ (BRL - Реал)</option>
+      </select>
+    </div>
+
     <div class="categories-wrapper">
       <button class="category-btn active" onclick="filterCategory('all', this)">Все товары</button>
       <button class="category-btn" onclick="filterCategory('wallets', this)">Кошельки</button>
@@ -506,7 +534,7 @@
       <div class="form-group">
         <div class="checkbox-group">
           <input type="checkbox" id="item-engraving-check" onchange="toggleItemEngraving()">
-          <label for="item-engraving-check">Персональная гравировка (+950 ₽)</label>
+          <label for="item-engraving-check" id="item-engraving-label">Персональная гравировка (+500 ₽)</label>
         </div>
       </div>
 
@@ -558,39 +586,86 @@
   <script>
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
-    // Ссылка на защищенный скрипт Google
-	const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbw7_bYZwaNw24Vy2vOTiF20VMP3VYc-744kklMwm6uHhhZJ8BoFVOBnXL7ObwhfApqm-g/exec";
+    // ================= НАСТРОЙКИ =================
+    // Вставь сюда URL веб-приложения Google Apps Script (оканчивается на /exec)
+    const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbw7_bYZwaNw24Vy2vOTiF20VMP3VYc-744kklMwm6uHhhZJ8BoFVOBnXL7ObwhfApqm-g/exec";
+    const ENGRAVING_PRICE_RUB = 500; // Стоимость гравировки в рублях
+    // =============================================
 
-    // Каталог товаров с поддержкой вариантов фото под каждый цвет
+    // Курсы валют
+    let currentCurrency = 'RUB';
+    let exchangeRates = {
+      RUB: 1,
+      USD: 0.011, // Резервный курс (~90 RUB/$)
+      BRL: 0.058  // Резервный курс (~17 RUB/BRL)
+    };
+
+    // Загрузка реальных курсов из ExchangeRate API
+    async function fetchExchangeRates() {
+      const cachedRates = localStorage.getItem('rates_cache');
+      const cacheTime = localStorage.getItem('rates_time');
+
+      if (cachedRates && cacheTime && (Date.now() - cacheTime < 6 * 60 * 60 * 1000)) {
+        exchangeRates = JSON.parse(cachedRates);
+        return;
+      }
+
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/RUB');
+        const data = await res.json();
+        if (data && data.rates) {
+          exchangeRates.USD = data.rates.USD;
+          exchangeRates.BRL = data.rates.BRL;
+          localStorage.setItem('rates_cache', JSON.stringify(exchangeRates));
+          localStorage.setItem('rates_time', Date.now());
+        }
+      } catch (e) {
+        console.warn('Используются резервные курсы валют:', e);
+      }
+    }
+
+    function formatPrice(rubPrice) {
+      if (currentCurrency === 'USD') {
+        const usd = (rubPrice * exchangeRates.USD).toFixed(0);
+        return `$${usd}`;
+      } else if (currentCurrency === 'BRL') {
+        const brl = (rubPrice * exchangeRates.BRL).toFixed(0);
+        return `R$ ${brl}`;
+      }
+      return `${rubPrice.toLocaleString()} ₽`;
+    }
+
+    function changeCurrency(currency) {
+      currentCurrency = currency;
+      renderProducts();
+      updateCartUI();
+      document.getElementById('item-engraving-label').textContent = 
+        `Персональная гравировка (+${formatPrice(ENGRAVING_PRICE_RUB)})`;
+    }
+
+    // Каталог товаров
     const products = [
       { 
         id: 101, 
-        category: 'accessories', 
-        name: 'Обложка Classic Driver', 
-        price: 9000, 
-        desc: 'Обложка для документов из бархатистой кожи. 3 отдела для паспорта и ПТС. 3 отдела под карты и водительское удостоверение. Удобная кнопка, чтобы не потерять важное. Ручной седельный шов вощеной нитью.',
+        category: 'wallets', 
+        name: 'Бифолд «Classic Craft»', 
+        price: 4500, 
+        desc: 'Классический кошелек из плотной кожи растительного дубления. 4 отдела под карты и вместительный отсек для купюр. Ручной седельный шов вощеной нитью.', 
         colorVariants: [
           {
-            color: "Темно коричневый (Шоколад)",
+            color: "Коньячный (Рыжий)",
             images: [
-              './images/oblozhkaV1/img1.webp',
-			        './images/oblozhkaV1/img2.webp',
-			        './images/oblozhkaV1/img3.webp',
-			        './images/oblozhkaV1/img4.webp',
-			        './images/oblozhkaV1/img6.webp'
+              './images/img2.webp',
+              './images/oblozhkaV1/img2.webp'
             ]
           },
           {
             color: "Черный матовый",
-            images: [
-              'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80'
-            ]
+            images: ['https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80']
           },
           {
             color: "Темно-коричневый (Шоколад)",
-            images: [
-              'https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80'
-            ]
+            images: ['https://images.unsplash.com/photo-1606503830010-85f021271f28?auto=format&fit=crop&w=600&q=80']
           }
         ]
       },
@@ -780,7 +855,7 @@
             <div class="product-category-tag">${getCategoryName(p.category)}</div>
             <div class="product-title" onclick="openProductModal(${p.id})">${p.name}</div>
             <div class="product-desc">${p.desc}</div>
-            <div class="product-price">${p.price.toLocaleString()} ₽</div>
+            <div class="product-price">${formatPrice(p.price)}</div>
             <button class="add-btn" onclick="openProductModal(${p.id})">Выбрать и заказать</button>
           </div>
         `;
@@ -810,21 +885,20 @@
       currentModalProduct = p;
 
       document.getElementById('detail-title').textContent = p.name;
-      document.getElementById('detail-price').textContent = `${p.price.toLocaleString()} ₽`;
+      document.getElementById('detail-price').textContent = formatPrice(p.price);
       document.getElementById('detail-desc').textContent = p.desc;
 
-      // Заполняем варианты цветов
       const colorSelect = document.getElementById('item-color-select');
       colorSelect.innerHTML = p.colorVariants.map((cv, idx) => `
         <option value="${idx}">${cv.color}</option>
       `).join('');
 
-      // Сброс гравировки
       document.getElementById('item-engraving-check').checked = false;
       document.getElementById('item-engraving-group').style.display = 'none';
       document.getElementById('item-engraving-text').value = '';
+      document.getElementById('item-engraving-label').textContent = 
+        `Персональная гравировка (+${formatPrice(ENGRAVING_PRICE_RUB)})`;
 
-      // Первичная отрисовка фото для первого цвета
       updateGalleryForSelectedColor();
 
       const addBtn = document.getElementById('detail-add-btn');
@@ -853,7 +927,7 @@
         <img src="${src}" alt="${currentModalProduct.name} - ${selectedVariant.color} ${idx + 1}" loading="lazy">
       `).join('');
 
-      gallery.scrollLeft = 0; // Возврат на первое фото при смене цвета
+      gallery.scrollLeft = 0;
 
       dotsContainer.innerHTML = imgs.length > 1 
         ? imgs.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}"></div>`).join('')
@@ -887,7 +961,7 @@
       const hasEngraving = document.getElementById('item-engraving-check').checked;
       const engravingText = hasEngraving ? document.getElementById('item-engraving-text').value.trim() : null;
 
-      const unitPrice = currentModalProduct.price + (hasEngraving ? 950 : 0);
+      const unitPriceRub = currentModalProduct.price + (hasEngraving ? ENGRAVING_PRICE_RUB : 0);
       const cartKey = `${currentModalProduct.id}_${colorName}_${hasEngraving ? (engravingText || 'yes') : 'none'}`;
 
       const existing = cart.find(i => i.cartKey === cartKey);
@@ -899,7 +973,7 @@
           id: currentModalProduct.id,
           name: currentModalProduct.name,
           image: previewImg,
-          price: unitPrice,
+          priceRub: unitPriceRub,
           color: colorName,
           engraving: engravingText || (hasEngraving ? 'Да' : null),
           qty: 1
@@ -927,10 +1001,10 @@
       const totalEl = document.getElementById('cart-total');
 
       const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-      const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const totalPriceRub = cart.reduce((sum, item) => sum + (item.priceRub * item.qty), 0);
 
       countEl.textContent = totalCount;
-      totalEl.textContent = `${totalPrice.toLocaleString()} ₽`;
+      totalEl.textContent = formatPrice(totalPriceRub);
 
       if (totalCount > 0) {
         cartBar.classList.add('visible');
@@ -956,7 +1030,7 @@
               🎨 ${item.color}
               ${item.engraving ? `<br>✍️ Гравировка: "${item.engraving}"` : ''}
             </div>
-            <div class="cart-item-price">${(item.price * item.qty).toLocaleString()} ₽</div>
+            <div class="cart-item-price">${formatPrice(item.priceRub * item.qty)}</div>
           </div>
           <div class="qty-controls">
             <button class="qty-btn" onclick="changeQtyByKey('${item.cartKey}', -1)">-</button>
@@ -992,7 +1066,7 @@
 
       const delivery = document.getElementById('delivery-method').value;
       const comment = document.getElementById('customer-comment').value.trim();
-      const itemsTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const itemsTotalRub = cart.reduce((sum, item) => sum + (item.priceRub * item.qty), 0);
 
       const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
       const userName = user ? (user.username ? `@${user.username}` : user.first_name) : "Неизвестный";
@@ -1002,17 +1076,22 @@
       messageText += `📋 <b>Состав заказа:</b>\n`;
       
       cart.forEach((item, idx) => {
-        messageText += `\n${idx + 1}. <b>${item.name}</b> — ${item.qty} шт. (${(item.price * item.qty).toLocaleString()} ₽)\n`;
+        messageText += `\n${idx + 1}. <b>${item.name}</b> — ${item.qty} шт. (${formatPrice(item.priceRub * item.qty)})\n`;
         messageText += `   🎨 Цвет: ${item.color}\n`;
         if (item.engraving) {
           messageText += `   ✍️ Гравировка: <i>${item.engraving}</i>\n`;
         }
       });
 
+      // Пересчет в разные валюты для мастера
+      const totalUSD = (itemsTotalRub * exchangeRates.USD).toFixed(0);
+      const totalBRL = (itemsTotalRub * exchangeRates.BRL).toFixed(0);
+
       messageText += `\n🚚 <b>Доставка:</b> ${delivery}\n`;
       messageText += `📞 <b>Телефон:</b> <code>${phone}</code>\n`;
       if (comment) messageText += `💬 <b>Комментарий:</b> ${comment}\n`;
-      messageText += `\n💰 <b>ИТОГО К ОПЛАТЕ:</b> <b>${itemsTotal.toLocaleString()} ₽</b>\n\n`;
+      messageText += `\n💰 <b>ИТОГО К ОПЛАТЕ:</b> <b>${itemsTotalRub.toLocaleString()} ₽</b> (~$${totalUSD} USD / R$ ${totalBRL} BRL)\n`;
+      messageText += `🌐 <b>Выбранная валюта:</b> ${currentCurrency}\n\n`;
       messageText += `👤 <b>Покупатель:</b> ${userName}\n`;
       messageText += `🆔 <b>Telegram ID:</b> <code>${userId}</code>`;
 
@@ -1049,13 +1128,14 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       if (tg) {
         try {
           tg.ready();
           tg.expand();
         } catch (e) {}
       }
+      await fetchExchangeRates();
       renderProducts();
     });
   </script>
