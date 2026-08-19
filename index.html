@@ -483,7 +483,6 @@
       <select class="currency-select" id="currency-select" onchange="changeCurrency(this.value)">
         <option value="RUB">₽ (RUB)</option>
         <option value="USD">$ (USD)</option>
-		<option value="RUB">₽ (RUB)</option>
         <option value="BRL">R$ (BRL)</option>
       </select>
     </div>
@@ -588,20 +587,17 @@
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
     // ================= НАСТРОЙКИ =================
-    // Вставь сюда URL веб-приложения Google Apps Script (оканчивается на /exec)
     const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbw7_bYZwaNw24Vy2vOTiF20VMP3VYc-744kklMwm6uHhhZJ8BoFVOBnXL7ObwhfApqm-g/exec";
-    const ENGRAVING_PRICE_RUB = 500; // Стоимость гравировки в рублях
+    const ENGRAVING_PRICE_RUB = 500;
     // =============================================
 
-    // Курсы валют
     let currentCurrency = 'RUB';
     let exchangeRates = {
       RUB: 1,
-      USD: 0.011, // Резервный курс (~90 RUB/$)
-      BRL: 0.058  // Резервный курс (~17 RUB/BRL)
+      USD: 0.011,
+      BRL: 0.058
     };
 
-    // Загрузка реальных курсов из ExchangeRate API
     async function fetchExchangeRates() {
       const cachedRates = localStorage.getItem('rates_cache');
       const cacheTime = localStorage.getItem('rates_time');
@@ -654,28 +650,28 @@
         desc: 'Обложка для документов. 3 отдела для паспорта и ПТС. 3 отдела под карты и водительское удостоверение. Удобная кнопка, чтобы не потерять важное. Ручной шов.',
         colorVariants: [
           {
-            color: "Темно коричневый (Шоколад)",
+            color: "Темно-коричневый (Шоколад)",
             images: [
-                    './images/oblozhkaV1/img1.webp',
-			        './images/oblozhkaV1/img2.webp',
-			        './images/oblozhkaV1/img3.webp',
-			        './images/oblozhkaV1/img4.webp',
-					'./images/oblozhkaV1/img6.webp'
+              './images/oblozhkaV1/img1.webp',
+              './images/oblozhkaV1/img2.webp',
+              './images/oblozhkaV1/img3.webp',
+              './images/oblozhkaV1/img4.webp',
+              './images/oblozhkaV1/img6.webp'
             ]
           },
           {
             color: "Черный матовый",
             images: [
-					'./images/oblozhkaV1/black3.webp',
-			        './images/oblozhkaV1/black1.webp',
-			        './images/oblozhkaV1/black4.webp',
-			        './images/oblozhkaV1/black2.webp',
-					'./images/oblozhkaV1/black5.webp'
-					]
-		  }
-       		 ]
-     	 },
-      	{ 
+              './images/oblozhkaV1/black3.webp',
+              './images/oblozhkaV1/black1.webp',
+              './images/oblozhkaV1/black4.webp',
+              './images/oblozhkaV1/black2.webp',
+              './images/oblozhkaV1/black5.webp'
+            ]
+          }
+        ]
+      },
+      { 
         id: 102, 
         category: 'wallets', 
         name: 'Картхолдер «Slim Leather»', 
@@ -1089,7 +1085,6 @@
         }
       });
 
-      // Пересчет в разные валюты для мастера
       const totalUSD = (itemsTotalRub * exchangeRates.USD).toFixed(0);
       const totalBRL = (itemsTotalRub * exchangeRates.BRL).toFixed(0);
 
