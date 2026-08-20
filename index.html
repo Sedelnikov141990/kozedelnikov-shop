@@ -145,6 +145,7 @@
       object-fit: cover;
       background-color: #26201b;
       cursor: pointer;
+      transition: opacity 0.2s ease;
     }
 
     .product-info {
@@ -178,7 +179,7 @@
     .product-desc {
       font-size: 11px;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -191,6 +192,66 @@
       color: var(--text-main);
       margin-top: auto;
       margin-bottom: 8px;
+    }
+
+    /* Color Swatches on Grid Card */
+    .color-swatches {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .color-dot.active {
+      transform: scale(1.2);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 3.5px var(--accent-color);
+    }
+
+    /* Color Swatches in Modal */
+    .modal-swatches {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .modal-color-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-color-item.active {
+      border-color: var(--accent-color);
+      background: rgba(212, 163, 115, 0.1);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .modal-color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .add-btn {
@@ -525,10 +586,10 @@
         <p id="detail-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
       </div>
 
-      <!-- Color Select with Live Photo Switch -->
+      <!-- Color Swatches Selector in Modal -->
       <div class="form-group">
-        <label class="form-label">Цвет кожи изделия:</label>
-        <select class="form-select" id="item-color-select" onchange="onColorChange()"></select>
+        <label class="form-label">Цвет кожи изделия: <span id="modal-selected-color-name" style="color: var(--accent-color); font-weight: 600;"></span></label>
+        <div class="modal-swatches" id="modal-swatches-container"></div>
       </div>
 
       <div class="form-group">
@@ -597,6 +658,22 @@
       USD: 0.011,
       BRL: 0.058
     };
+
+    // Определение цвета для CSS-кругляшков
+    function getColorHex(colorName) {
+      const lower = colorName.toLowerCase();
+      if (lower.includes('черн') && lower.includes('красн')) return 'linear-gradient(135deg, #1a1a1a 50%, #8b0000 50%)';
+      if (lower.includes('черн') || lower.includes('чёрн')) return '#1a1a1a';
+      if (lower.includes('шоколад') || lower.includes('темно') || lower.includes('коричн')) return '#3d2314';
+      if (lower.includes('рыж') || lower.includes('коньяк')) return '#a65b24';
+      if (lower.includes('бордо') || lower.includes('вишн')) return '#58111a';
+      if (lower.includes('красн')) return '#8b0000';
+      if (lower.includes('зелен') || lower.includes('изумруд')) return '#1b382b';
+      if (lower.includes('син') || lower.includes('navy')) return '#1a2b4c';
+      if (lower.includes('желт') || lower.includes('жёлт') || lower.includes('горчиц')) return '#c28b1e';
+      if (lower.includes('оливк')) return '#556b2f';
+      return '#8b5a2b';
+    }
 
     async function fetchExchangeRates() {
       const cachedRates = localStorage.getItem('rates_cache');
@@ -678,7 +755,7 @@
         price: 7000, 
         desc: 'Компактный картхолдер для 4-6 карт и наличных. Ручной шов.', 
         colorVariants: [
-         {
+          {
             color: "Черный матовый",
             images: [
               './images/cartholder1/cartholderM2.webp',
@@ -784,7 +861,7 @@
               './images/baggirl/wine/wine2.webp',
               './images/baggirl/wine/wine3.webp',
               './images/baggirl/wine/wine4.webp',
-              './images/baggirl/wine/wine5.webp.webp'
+              './images/baggirl/wine/wine5.webp'
             ]
           }
         ]
@@ -872,13 +949,13 @@
       { 
         id: 402, 
         category: 'adult', 
-        name: 'Набор из браслетов и манжет на лодыжку»', 
+        name: 'Набор из браслетов и манжет на лодыжку', 
         price: 9550, 
         desc: 'Премиальный комплект кожаных наручников для ценителей эстетики контроля и власти. Надежная фурнитура, безупречное качество и 10 лет гарантии.', 
         colorVariants: [
           {
             color: "Черный, красный",
-             images: [
+            images: [
               './images/18+/18A1.webp',
               './images/18+/18A2.webp',
               './images/18+/18A3.webp',
@@ -905,6 +982,7 @@
 
     let cart = [];
     let currentModalProduct = null;
+    let selectedColorIndex = 0;
 
     function renderProducts(filter = 'all') {
       const grid = document.getElementById('products-grid');
@@ -916,20 +994,52 @@
 
       filtered.forEach(p => {
         const coverImg = (p.colorVariants && p.colorVariants[0] && p.colorVariants[0].images[0]) || '';
+        
+        // Генерация кругляшков цветов для карточки
+        const swatchesHtml = p.colorVariants && p.colorVariants.length > 1 ? `
+          <div class="color-swatches">
+            ${p.colorVariants.map((cv, idx) => `
+              <div class="color-dot ${idx === 0 ? 'active' : ''}" 
+                   style="background: ${getColorHex(cv.color)};" 
+                   title="${cv.color}"
+                   onclick="event.stopPropagation(); changeCardColor(${p.id}, ${idx}, this)">
+              </div>
+            `).join('')}
+          </div>
+        ` : '<div style="height: 6px;"></div>';
+
         const card = document.createElement('div');
         card.className = 'product-card';
+        card.id = `product-card-${p.id}`;
         card.innerHTML = `
-          <img class="product-img" src="${coverImg}" alt="${p.name}" loading="lazy" onclick="openProductModal(${p.id})">
+          <img class="product-img" id="img-product-${p.id}" src="${coverImg}" alt="${p.name}" loading="lazy" onclick="openProductModal(${p.id})">
           <div class="product-info">
             <div class="product-category-tag">${getCategoryName(p.category)}</div>
             <div class="product-title" onclick="openProductModal(${p.id})">${p.name}</div>
             <div class="product-desc">${p.desc}</div>
             <div class="product-price">${formatPrice(p.price)}</div>
+            ${swatchesHtml}
             <button class="add-btn" onclick="openProductModal(${p.id})">Выбрать и заказать</button>
           </div>
         `;
         grid.appendChild(card);
       });
+    }
+
+    function changeCardColor(productId, colorIdx, dotEl) {
+      const p = products.find(item => item.id === productId);
+      if (!p || !p.colorVariants[colorIdx]) return;
+
+      const imgEl = document.getElementById(`img-product-${productId}`);
+      if (imgEl && p.colorVariants[colorIdx].images[0]) {
+        imgEl.src = p.colorVariants[colorIdx].images[0];
+      }
+
+      const card = document.getElementById(`product-card-${productId}`);
+      if (card) {
+        card.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        dotEl.classList.add('active');
+      }
     }
 
     function getCategoryName(cat) {
@@ -948,19 +1058,25 @@
       renderProducts(cat);
     }
 
-    function openProductModal(productId) {
+    function openProductModal(productId, defaultColorIdx = 0) {
       const p = products.find(item => item.id === productId);
       if (!p) return;
       currentModalProduct = p;
+      selectedColorIndex = defaultColorIdx;
 
       document.getElementById('detail-title').textContent = p.name;
       document.getElementById('detail-price').textContent = formatPrice(p.price);
       document.getElementById('detail-desc').textContent = p.desc;
 
-      const colorSelect = document.getElementById('item-color-select');
-      colorSelect.innerHTML = p.colorVariants.map((cv, idx) => `
-        <option value="${idx}">${cv.color}</option>
+      const swatchesContainer = document.getElementById('modal-swatches-container');
+      swatchesContainer.innerHTML = p.colorVariants.map((cv, idx) => `
+        <div class="modal-color-item ${idx === selectedColorIndex ? 'active' : ''}" onclick="selectModalColor(${idx})">
+          <div class="modal-color-dot" style="background: ${getColorHex(cv.color)};"></div>
+          <span>${cv.color}</span>
+        </div>
       `).join('');
+
+      document.getElementById('modal-selected-color-name').textContent = p.colorVariants[selectedColorIndex].color;
 
       document.getElementById('item-engraving-check').checked = false;
       document.getElementById('item-engraving-group').style.display = 'none';
@@ -978,15 +1094,25 @@
       document.getElementById('product-detail-modal').classList.add('active');
     }
 
-    function onColorChange() {
+    function selectModalColor(idx) {
+      selectedColorIndex = idx;
+      
+      const container = document.getElementById('modal-swatches-container');
+      container.querySelectorAll('.modal-color-item').forEach((item, i) => {
+        item.classList.toggle('active', i === idx);
+      });
+
+      if (currentModalProduct && currentModalProduct.colorVariants[idx]) {
+        document.getElementById('modal-selected-color-name').textContent = currentModalProduct.colorVariants[idx].color;
+      }
+
       updateGalleryForSelectedColor();
     }
 
     function updateGalleryForSelectedColor() {
       if (!currentModalProduct) return;
 
-      const colorIndex = parseInt(document.getElementById('item-color-select').value, 10) || 0;
-      const selectedVariant = currentModalProduct.colorVariants[colorIndex];
+      const selectedVariant = currentModalProduct.colorVariants[selectedColorIndex];
       const imgs = selectedVariant ? selectedVariant.images : [];
 
       const gallery = document.getElementById('detail-gallery');
@@ -1022,8 +1148,7 @@
     function addItemWithCustomization() {
       if (!currentModalProduct) return;
 
-      const colorIndex = parseInt(document.getElementById('item-color-select').value, 10) || 0;
-      const selectedVariant = currentModalProduct.colorVariants[colorIndex];
+      const selectedVariant = currentModalProduct.colorVariants[selectedColorIndex];
       const colorName = selectedVariant.color;
       const previewImg = selectedVariant.images[0] || '';
 
