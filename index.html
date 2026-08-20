@@ -64,45 +64,61 @@
       margin-bottom: 12px;
     }
 
-    /* Top Action Bar (Currency + About button) */
+    /* Top Action Bar (Currency + About + Custom Order) */
     .top-action-bar {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
       margin-bottom: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+
+    .top-action-bar::-webkit-scrollbar {
+      display: none;
     }
 
     .currency-select {
       background: var(--card-bg);
       color: var(--accent-color);
       border: 1px solid var(--border-color);
-      padding: 6px 14px;
+      padding: 6px 10px;
       border-radius: 12px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       outline: none;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
-    .about-btn {
+    .action-btn {
       background: var(--card-bg);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 12px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
       transition: all 0.2s ease;
     }
 
-    .about-btn:active {
+    .action-btn:active {
       border-color: var(--accent-color);
       color: var(--accent-color);
+    }
+
+    .action-btn.highlight {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      background: rgba(212, 163, 115, 0.08);
     }
 
     .categories-wrapper {
@@ -506,7 +522,7 @@
       display: block;
     }
 
-    .form-input, .form-select {
+    .form-input, .form-select, .form-textarea {
       width: 100%;
       padding: 10px 12px;
       background: var(--bg-color);
@@ -515,9 +531,15 @@
       color: var(--text-main);
       font-size: 13px;
       outline: none;
+      font-family: inherit;
     }
 
-    .form-input:focus, .form-select:focus {
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
       border-color: var(--accent-color);
     }
 
@@ -607,7 +629,7 @@
     <div class="brand-title">KOZHEDELNIKOV</div>
     <div class="brand-subtitle">Leather Craft & Accessories</div>
 
-    <!-- Top Action Bar: Currency & About Master -->
+    <!-- Top Action Bar: Currency, Custom Order, About -->
     <div class="top-action-bar">
       <select class="currency-select" id="currency-select" onchange="changeCurrency(this.value)">
         <option value="RUB">₽ (RUB)</option>
@@ -615,7 +637,11 @@
         <option value="BRL">R$ (BRL)</option>
       </select>
 
-      <button class="about-btn" onclick="openAboutModal()">
+      <button class="action-btn highlight" onclick="openCustomOrderModal()">
+        <span>✨</span> Индивидуальный заказ
+      </button>
+
+      <button class="action-btn" onclick="openAboutModal()">
         <span>ℹ️</span> О мастере
       </button>
     </div>
@@ -640,6 +666,53 @@
       <span class="cart-count-badge" id="cart-count">0</span>
     </div>
     <div id="cart-total">0 ₽</div>
+  </div>
+
+  <!-- Modal: Custom Order -->
+  <div class="modal-overlay" id="custom-order-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Индивидуальный заказ</div>
+        <button class="close-btn" onclick="closeCustomOrderModal()">&times;</button>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+        Изготовим изделие по вашим размерам, эскизам, референсам или индивидуальным пожеланиям.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">Тип изделия / Что хотите заказать:*</label>
+        <input type="text" class="form-input" id="custom-item-name" placeholder="Например: Портфель для ноутбука 16 дюймов">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Желаемый цвет кожи и нити:</label>
+        <input type="text" class="form-input" id="custom-item-color" placeholder="Например: Коньячная кожа, бежевая нить">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Описание, размеры и детали заказа:*</label>
+        <textarea class="form-textarea" id="custom-item-desc" placeholder="Укажите нужные карманы, гравировку инициалов, размеры или ссылку на фото..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Номер телефона для связи:*</label>
+        <input type="tel" class="form-input" id="custom-customer-phone" placeholder="+7 (999) 000-00-00">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Удобный способ связи:</label>
+        <select class="form-select" id="custom-contact-type">
+          <option value="Telegram">Telegram (сообщение)</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Звонок по телефону">Звонок по телефону</option>
+        </select>
+      </div>
+
+      <button class="checkout-btn" id="custom-submit-btn" onclick="submitCustomOrder()">
+        Отправить заявку мастеру
+      </button>
+    </div>
   </div>
 
   <!-- Modal: About Workshop & Contacts -->
@@ -1178,6 +1251,80 @@
 
     function closeAboutModal() {
       document.getElementById('about-modal').classList.remove('active');
+    }
+
+    // Modal Custom Order Handlers
+    function openCustomOrderModal() {
+      document.getElementById('custom-order-modal').classList.add('active');
+    }
+
+    function closeCustomOrderModal() {
+      document.getElementById('custom-order-modal').classList.remove('active');
+    }
+
+    // Submit Custom Order
+    async function submitCustomOrder() {
+      const itemName = document.getElementById('custom-item-name').value.trim();
+      const itemDesc = document.getElementById('custom-item-desc').value.trim();
+      const phone = document.getElementById('custom-customer-phone').value.trim();
+      const itemColor = document.getElementById('custom-item-color').value.trim();
+      const contactType = document.getElementById('custom-contact-type').value;
+
+      if (!itemName || !itemDesc || !phone) {
+        if (tg && tg.showAlert) tg.showAlert('Пожалуйста, заполните название изделия, описание и ваш телефон.');
+        else alert('Пожалуйста, заполните название изделия, описание и ваш телефон.');
+        return;
+      }
+
+      const btn = document.getElementById('custom-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Отправка заявки...';
+
+      const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+      const userName = user ? (user.username ? `@${user.username}` : user.first_name) : "Неизвестный";
+      const userId = user ? user.id : "Не определен";
+
+      let messageText = `✨ <b>ЗАЯВКА НА ИНДИВИДУАЛЬНЫЙ ЗАКАЗ!</b>\n\n`;
+      messageText += `💼 <b>Изделие:</b> ${itemName}\n`;
+      if (itemColor) messageText += `🎨 <b>Цвет/Кожа:</b> ${itemColor}\n`;
+      messageText += `📝 <b>Пожелания и детали:</b>\n${itemDesc}\n\n`;
+      messageText += `📞 <b>Телефон:</b> <code>${phone}</code>\n`;
+      messageText += `💬 <b>Удобный способ связи:</b> ${contactType}\n\n`;
+      messageText += `👤 <b>Клиент:</b> ${userName}\n`;
+      messageText += `🆔 <b>Telegram ID:</b> <code>${userId}</code>`;
+
+      try {
+        const response = await fetch(ORDER_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ text: messageText })
+        });
+
+        if (response.ok) {
+          if (tg && tg.showAlert) {
+            tg.showAlert('✅ Заявка на индивидуальный заказ отправлена! Мастер свяжется с вами для обсуждения деталей.', () => {
+              closeCustomOrderModal();
+            });
+          } else {
+            alert('✅ Заявка на индивидуальный заказ отправлена!');
+            closeCustomOrderModal();
+          }
+          // Очистка полей
+          document.getElementById('custom-item-name').value = '';
+          document.getElementById('custom-item-color').value = '';
+          document.getElementById('custom-item-desc').value = '';
+          document.getElementById('custom-customer-phone').value = '';
+        } else {
+          throw new Error('Server error');
+        }
+      } catch (err) {
+        console.error(err);
+        if (tg && tg.showAlert) tg.showAlert('Ошибка при отправке заявки.');
+        else alert('Ошибка при отправке заявки.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить заявку мастеру';
+      }
     }
 
     // Modal Product Handlers
