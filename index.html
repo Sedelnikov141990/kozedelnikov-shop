@@ -710,16 +710,16 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Номер телефона для связи:*</label>
-        <input type="tel" class="form-input" id="custom-customer-phone" placeholder="+7 (999) 000-00-00">
+        <label class="form-label">Удобный способ связи:</label>
+        <select class="form-select" id="custom-contact-type" onchange="onCustomContactTypeChange()">
+          <option value="Telegram">Telegram</option>
+          <option value="WhatsApp">WhatsApp</option>
+        </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Удобный способ связи:</label>
-        <select class="form-select" id="custom-contact-type">
-          <option value="Telegram">Telegram (сообщение)</option>
-          <option value="WhatsApp">WhatsApp</option>
-        </select>
+        <label class="form-label" id="custom-contact-label">Ваш ник в Telegram:*</label>
+        <input type="text" class="form-input" id="custom-contact-value" placeholder="@username">
       </div>
 
       <div class="consent-group">
@@ -863,7 +863,7 @@
     const ENGRAVING_PRICE_RUB = 500;
     // =============================================
 
-    let currentCurrency = 'RUB';
+    let currentCurrency = 'USD';
     let exchangeRates = {
       RUB: 1,
       USD: 0.011,
@@ -1155,9 +1155,9 @@
         name: 'Портупея Elegance', 
         price: 9850, 
         desc: `Портупея создана для того, чтобы подчеркнуть уверенность, элегантность и смелое самовыражение. Регулируемые ремни и усиленная металлическая фурнитура создают модульную конструкцию, подчёркивающую силуэт, идеальную посадку, смелую элегантность и полную свободу движений.
-              3 ремешка — 29 × 1,5 см
-              10 ремешков — 27 × 1,5 см
-              3 ремешка — 15 × 1,5 см`, 
+3 ремешка — 29 × 1,5 см
+10 ремешков — 27 × 1,5 см
+3 ремешка — 15 × 1,5 см`, 
         colorVariants: [
           {
             color: "Черный",
@@ -1307,6 +1307,7 @@
 
     // Modal Custom Order Handlers
     function openCustomOrderModal() {
+      onCustomContactTypeChange();
       document.getElementById('custom-order-modal').classList.add('active');
     }
 
@@ -1314,13 +1315,37 @@
       document.getElementById('custom-order-modal').classList.remove('active');
     }
 
+    function onCustomContactTypeChange() {
+      const select = document.getElementById('custom-contact-type');
+      const label = document.getElementById('custom-contact-label');
+      const input = document.getElementById('custom-contact-value');
+      
+      if (!select || !label || !input) return;
+
+      if (select.value === 'WhatsApp') {
+        label.textContent = 'Номер телефона для WhatsApp:*';
+        input.placeholder = '+7 (999) 000-00-00';
+        input.type = 'tel';
+        if (input.value.startsWith('@')) input.value = '';
+      } else {
+        label.textContent = 'Ваш ник в Telegram:*';
+        input.placeholder = '@username';
+        input.type = 'text';
+        
+        // Автоматически подставляем ник из Telegram WebApp если поле пустое
+        if (!input.value && tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username) {
+          input.value = `@${tg.initDataUnsafe.user.username}`;
+        }
+      }
+    }
+
     // Submit Custom Order with Consent Validation
     async function submitCustomOrder() {
       const itemName = document.getElementById('custom-item-name').value.trim();
       const itemDesc = document.getElementById('custom-item-desc').value.trim();
-      const phone = document.getElementById('custom-customer-phone').value.trim();
       const itemColor = document.getElementById('custom-item-color').value.trim();
       const contactType = document.getElementById('custom-contact-type').value;
+      const contactValue = document.getElementById('custom-contact-value').value.trim();
       const hasConsent = document.getElementById('custom-consent-check').checked;
 
       if (!hasConsent) {
@@ -1329,9 +1354,10 @@
         return;
       }
 
-      if (!itemName || !itemDesc || !phone) {
-        if (tg && tg.showAlert) tg.showAlert('Пожалуйста, заполните название изделия, описание и ваш телефон.');
-        else alert('Пожалуйста, заполните название изделия, описание и ваш телефон.');
+      if (!itemName || !itemDesc || !contactValue) {
+        const fieldName = contactType === 'WhatsApp' ? 'телефон для WhatsApp' : 'ник в Telegram';
+        if (tg && tg.showAlert) tg.showAlert(`Пожалуйста, заполните название изделия, описание и ваш ${fieldName}.`);
+        else alert(`Пожалуйста, заполните название изделия, описание и ваш ${fieldName}.`);
         return;
       }
 
@@ -1347,8 +1373,8 @@
       messageText += `💼 <b>Изделие:</b> ${itemName}\n`;
       if (itemColor) messageText += `🎨 <b>Цвет/Кожа:</b> ${itemColor}\n`;
       messageText += `📝 <b>Пожелания и детали:</b>\n${itemDesc}\n\n`;
-      messageText += `📞 <b>Телефон:</b> <code>${phone}</code>\n`;
-      messageText += `💬 <b>Удобный способ связи:</b> ${contactType}\n\n`;
+      messageText += `💬 <b>Способ связи:</b> ${contactType}\n`;
+      messageText += `📞 <b>Контакт:</b> <code>${contactValue}</code>\n\n`;
       messageText += `👤 <b>Клиент:</b> ${userName}\n`;
       messageText += `🆔 <b>Telegram ID:</b> <code>${userId}</code>`;
 
@@ -1371,7 +1397,7 @@
           document.getElementById('custom-item-name').value = '';
           document.getElementById('custom-item-color').value = '';
           document.getElementById('custom-item-desc').value = '';
-          document.getElementById('custom-customer-phone').value = '';
+          document.getElementById('custom-contact-value').value = '';
         } else {
           throw new Error('Server error');
         }
